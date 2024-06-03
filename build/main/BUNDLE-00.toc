@@ -1,1 +1,0 @@
-([('main', '/Users/jean/Documents/Github/Lactate-J/dist/main', 'EXECUTABLE')],)
