@@ -74,7 +74,7 @@ lactate-test-app/
 
 ## Example Data Format
 
-The Excel file should contain columns for “Stage”, “Lactate”, “Heart Rate”, and “Power”. If the “Stage” column is missing, the app will generate stage numbers automatically.
+The Excel file should contain columns for “Lactate”, “Heart Rate”, and “Power”. If the “Stage” column is missing, the app will generate stage numbers automatically.
 
 | Stage | Lactate | Heart Rate | Power |
 |-------|---------|------------|-------|
