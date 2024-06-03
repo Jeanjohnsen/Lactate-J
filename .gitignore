@@ -112,6 +112,8 @@ build/
 .dmypy.json
 dmypy.json
 
+data/
+/data
 # Pyre type checker
 .pyre/
 
