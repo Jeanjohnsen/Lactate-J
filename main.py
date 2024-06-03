@@ -5,12 +5,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+
 class LactateTestApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Lactate Test App")
+        self.root.geometry("800x600")  # Set initial size
 
-        self.data = {"stage": [], "lactate": [], "heart_rate": [], "power": []}
+        self.data = {"lactate": [], "heart_rate": [], "power": []}
 
         # Create notebook for tabs
         self.notebook = ttk.Notebook(root)
@@ -20,6 +22,12 @@ class LactateTestApp:
         self.create_data_input_tab()
         self.create_graph_tab()
 
+        # Bind the window resize event
+        self.root.bind('<Configure>', self.on_resize)
+
+        # Bind the Enter key to add_data function
+        self.root.bind('<Return>', self.on_enter_key)
+
     def create_data_input_tab(self):
         # Tab for data input
         self.data_input_frame = ttk.Frame(self.notebook)
@@ -27,65 +35,71 @@ class LactateTestApp:
 
         # Input fields
         input_frame = ttk.Frame(self.data_input_frame)
-        input_frame.pack(fill=tk.X, padx=10, pady=5)
+        input_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
+        input_frame.columnconfigure(1, weight=1)
 
-        ttk.Label(input_frame, text="Lactate (mmol/L):").grid(column=0, row=0, padx=5, pady=5)
+        ttk.Label(input_frame, text="Lactate (mmol/L):").grid(column=0, row=0, padx=5, pady=5, sticky="w")
         self.lactate_var = tk.StringVar()
-        ttk.Entry(input_frame, textvariable=self.lactate_var).grid(column=1, row=0, padx=5, pady=5)
+        ttk.Entry(input_frame, textvariable=self.lactate_var).grid(column=1, row=0, padx=5, pady=5, sticky="ew")
 
-        ttk.Label(input_frame, text="Heart Rate (bpm):").grid(column=0, row=1, padx=5, pady=5)
+        ttk.Label(input_frame, text="Heart Rate (bpm):").grid(column=0, row=1, padx=5, pady=5, sticky="w")
         self.hr_var = tk.StringVar()
-        ttk.Entry(input_frame, textvariable=self.hr_var).grid(column=1, row=1, padx=5, pady=5)
+        ttk.Entry(input_frame, textvariable=self.hr_var).grid(column=1, row=1, padx=5, pady=5, sticky="ew")
 
-        ttk.Label(input_frame, text="Power (W):").grid(column=0, row=2, padx=5, pady=5)
+        ttk.Label(input_frame, text="Power (W):").grid(column=0, row=2, padx=5, pady=5, sticky="w")
         self.power_var = tk.StringVar()
-        ttk.Entry(input_frame, textvariable=self.power_var).grid(column=1, row=2, padx=5, pady=5)
+        ttk.Entry(input_frame, textvariable=self.power_var).grid(column=1, row=2, padx=5, pady=5, sticky="ew")
 
         # Buttons for adding data, plotting data, uploading Excel file, and clearing data
         button_frame = ttk.Frame(self.data_input_frame)
-        button_frame.pack(fill=tk.X, padx=10, pady=5)
+        button_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=5)
+        button_frame.columnconfigure((0, 1, 2, 3), weight=1)
 
-        ttk.Button(button_frame, text="Add Data", command=self.add_data).pack(side=tk.LEFT, padx=5, pady=5)
-        ttk.Button(button_frame, text="Plot Data", command=self.plot_data).pack(side=tk.LEFT, padx=5, pady=5)
-        ttk.Button(button_frame, text="Upload Excel", command=self.upload_excel).pack(side=tk.LEFT, padx=5, pady=5)
-        ttk.Button(button_frame, text="Clear Data", command=self.clear_data).pack(side=tk.LEFT, padx=5, pady=5)
+        ttk.Button(button_frame, text="Add Data", command=self.add_data).grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+        ttk.Button(button_frame, text="Plot Data", command=self.plot_data).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        ttk.Button(button_frame, text="Upload Excel", command=self.upload_excel).grid(row=0, column=2, padx=5, pady=5, sticky="ew")
+        ttk.Button(button_frame, text="Clear Data", command=self.clear_data).grid(row=0, column=3, padx=5, pady=5, sticky="ew")
 
         # Labels and buttons for FTP, LT1, LT2, and FATmax calculations
         self.ftp_frame = ttk.Frame(self.data_input_frame)
-        self.ftp_frame.pack(fill=tk.X, padx=10, pady=5)
+        self.ftp_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=5)
         self.ftp_label = ttk.Label(self.ftp_frame, text="FTP: Not Calculated")
-        self.ftp_label.pack(side=tk.LEFT, padx=5)
-        ttk.Button(self.ftp_frame, text="Calculate FTP", command=self.calculate_ftp).pack(side=tk.LEFT, padx=5)
+        self.ftp_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        ttk.Button(self.ftp_frame, text="Calculate FTP", command=self.calculate_ftp).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
         self.lt1_frame = ttk.Frame(self.data_input_frame)
-        self.lt1_frame.pack(fill=tk.X, padx=10, pady=5)
+        self.lt1_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=5)
         self.lt1_label = ttk.Label(self.lt1_frame, text="LT1: Not Calculated")
-        self.lt1_label.pack(side=tk.LEFT, padx=5)
-        ttk.Button(self.lt1_frame, text="Calculate LT1", command=self.calculate_lt1).pack(side=tk.LEFT, padx=5)
+        self.lt1_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        ttk.Button(self.lt1_frame, text="Calculate LT1", command=self.calculate_lt1).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
         self.lt2_frame = ttk.Frame(self.data_input_frame)
-        self.lt2_frame.pack(fill=tk.X, padx=10, pady=5)
+        self.lt2_frame.grid(row=4, column=0, sticky="ew", padx=10, pady=5)
         self.lt2_label = ttk.Label(self.lt2_frame, text="LT2: Not Calculated")
-        self.lt2_label.pack(side=tk.LEFT, padx=5)
-        ttk.Button(self.lt2_frame, text="Calculate LT2", command=self.calculate_lt2).pack(side=tk.LEFT, padx=5)
+        self.lt2_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        ttk.Button(self.lt2_frame, text="Calculate LT2", command=self.calculate_lt2).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
         self.fatmax_frame = ttk.Frame(self.data_input_frame)
-        self.fatmax_frame.pack(fill=tk.X, padx=10, pady=5)
+        self.fatmax_frame.grid(row=5, column=0, sticky="ew", padx=10, pady=5)
         self.fatmax_label = ttk.Label(self.fatmax_frame, text="FATmax: Not Calculated")
-        self.fatmax_label.pack(side=tk.LEFT, padx=5)
-        ttk.Button(self.fatmax_frame, text="Calculate FATmax", command=self.calculate_fatmax).pack(side=tk.LEFT, padx=5)
+        self.fatmax_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        ttk.Button(self.fatmax_frame, text="Calculate FATmax", command=self.calculate_fatmax).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
         # Data table
         self.tree = ttk.Treeview(self.data_input_frame, columns=("Lactate", "Heart Rate", "Power"), show='headings')
         self.tree.heading("Lactate", text="Lactate (mmol/L)")
         self.tree.heading("Heart Rate", text="Heart Rate (bpm)")
         self.tree.heading("Power", text="Power (W)")
-        self.tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        self.tree.grid(row=6, column=0, sticky="nsew", padx=10, pady=5)
 
         # Scrollbar for the treeview
         tree_scroll = ttk.Scrollbar(self.data_input_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscroll=tree_scroll.set)
-        tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        tree_scroll.grid(row=6, column=1, sticky="ns")
+
+        # Make the treeview expandable
+        self.data_input_frame.rowconfigure(6, weight=1)
+        self.data_input_frame.columnconfigure(0, weight=1)
 
     def create_graph_tab(self):
         # Tab for displaying graphs
@@ -111,25 +125,38 @@ class LactateTestApp:
         # Configure scroll region for canvas
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
+    def on_resize(self, event):
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+    def on_enter_key(self, event):
+        self.add_data()
+
     def add_data(self):
         # Add data from input fields to the table and internal data structure
-        try:
-            lactate = float(self.lactate_var.get())
-            heart_rate = int(self.hr_var.get())
-            power = int(self.power_var.get())
+        lactate = self.lactate_var.get()
+        heart_rate = self.hr_var.get()
+        power = self.power_var.get()
 
-            self.data["lactate"].append(lactate)
-            self.data["heart_rate"].append(heart_rate)
-            self.data["power"].append(power)
+        if lactate and heart_rate and power:
+            try:
+                lactate = float(lactate)
+                heart_rate = int(heart_rate)
+                power = int(power)
 
-            self.tree.insert("", "end", values=(lactate, heart_rate, power))
+                self.data["lactate"].append(lactate)
+                self.data["heart_rate"].append(heart_rate)
+                self.data["power"].append(power)
 
-            # Clear input fields
-            self.lactate_var.set("")
-            self.hr_var.set("")
-            self.power_var.set("")
-        except ValueError:
-            messagebox.showerror("Invalid input", "Please enter valid data for all fields.")
+                self.tree.insert("", "end", values=(lactate, heart_rate, power))
+
+                # Clear input fields
+                self.lactate_var.set("")
+                self.hr_var.set("")
+                self.power_var.set("")
+            except ValueError:
+                messagebox.showerror("Invalid input", "Please enter valid data for all fields.")
+        else:
+            messagebox.showerror("Missing data", "Please fill in all fields.")
 
     def upload_excel(self):
         # Upload data from an Excel file
@@ -139,47 +166,46 @@ class LactateTestApp:
                 df = pd.read_excel(file_path)
                 self.load_data_from_dataframe(df)
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to read Excel file: {e}")
-
+                messagebox.showerror("Error", f"Failedto load Excel file: {e}")
+                
     def load_data_from_dataframe(self, df):
-        # Load data from a DataFrame into the application
-        self.clear_data()
-        for index, row in df.iterrows():
+        # Load data from a DataFrame
+        for _, row in df.iterrows():
             lactate = row['Lactate']
             heart_rate = row['Heart Rate']
             power = row['Power']
-
             self.data["lactate"].append(lactate)
             self.data["heart_rate"].append(heart_rate)
             self.data["power"].append(power)
-
             self.tree.insert("", "end", values=(lactate, heart_rate, power))
 
     def clear_data(self):
         # Clear all data
-        self.data = {"lactate": [], "heart_rate": [], "power": []}
-        self.tree.delete(*self.tree.get_children())
+        for key in self.data:
+            self.data[key].clear()
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        self.ftp_label.config(text="FTP: Not Calculated")
+        self.lt1_label.config(text="LT1: Not Calculated")
+        self.lt2_label.config(text="LT2: Not Calculated")
+        self.fatmax_label.config(text="FATmax: Not Calculated")
 
     def calculate_ftp(self):
-        # Calculate FTP
         ftp, _, _, _ = self.calculate_ftp_lt1_lt2_fatmax()
         if ftp is not None:
             self.ftp_label.config(text=f"FTP: {ftp:.2f} W")
 
     def calculate_lt1(self):
-        # Calculate LT1
         _, lt1, _, _ = self.calculate_ftp_lt1_lt2_fatmax()
         if lt1 is not None:
             self.lt1_label.config(text=f"LT1: {lt1:.2f} W")
 
     def calculate_lt2(self):
-        # Calculate LT2
         _, _, lt2, _ = self.calculate_ftp_lt1_lt2_fatmax()
         if lt2 is not None:
             self.lt2_label.config(text=f"LT2: {lt2:.2f} W")
-    
+
     def calculate_fatmax(self):
-    # Calculate FATmax
         _, _, _, fatmax = self.calculate_ftp_lt1_lt2_fatmax()
         if fatmax is not None:
             self.fatmax_label.config(text=f"FATmax: {fatmax:.2f} W")
@@ -224,7 +250,6 @@ class LactateTestApp:
         return ftp_power, lt1_power, lt2_power, fatmax_power
 
     def plot_data(self):
-        # Plot the data
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
 

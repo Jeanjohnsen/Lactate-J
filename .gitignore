@@ -114,6 +114,9 @@ dmypy.json
 
 data/
 /data
+dist/
+build/
+
 # Pyre type checker
 .pyre/
 
