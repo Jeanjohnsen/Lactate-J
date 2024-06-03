@@ -82,5 +82,9 @@ The Excel file should contain columns for “Stage”, “Lactate”, “Heart R
 | 3     | 1.8     | 140        | 220   |
 | ...   | ...     | ...        | ...   |
 
+## License
+
+This project is licensed under a custom license for use strictly as part of a Software as a Service (SaaS) offering provided by the copyright holder. For any usage outside of the permissions granted, please contact [HøjFrekvens] at [jeanjohnsen@pm.me].
+
 ## Contact
 For any questions or issues, please open an issue on the GitHub repository or contact me at jeanjohnsen@pm.me
