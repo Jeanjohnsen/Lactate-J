@@ -23,8 +23,8 @@ Lactate Test App is a Python application that helps athletes and coaches analyze
 
 1. **Clone the repository**:
     ```sh
-    git clone https://github.com/yourusername/lactate-test-app.git
-    cd lactate-test-app
+    git clone https://github.com/jeanjohnsen/Lactate-J.git
+    cd lactate-j
     ```
 
 2. **Install required Python packages**:
@@ -34,7 +34,7 @@ Lactate Test App is a Python application that helps athletes and coaches analyze
 
 3. **Run the application**:
     ```sh
-    python lactate_test_app.py
+    python main.py
     ```
 
 ## Usage
@@ -66,8 +66,9 @@ Lactate Test App is a Python application that helps athletes and coaches analyze
 ```plaintext
 lactate-test-app/
 │
-├── lactate_test_app.py   # Main application script
+├── main.py   # Main application script
 ├── README.md             # This readme file
+├── LICENSE               # Custom license
 └── requirements.txt      # Python package requirements
 ```
 
