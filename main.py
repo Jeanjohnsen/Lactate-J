@@ -2,9 +2,12 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+import matplotlib
+import matplotlib.pyplot
 import numpy as np
 import pandas as pd
 
+matplotlib.use('Agg')
 
 class LactateTestApp:
     def __init__(self, root):
@@ -27,6 +30,11 @@ class LactateTestApp:
 
         # Bind the Enter key to add_data function
         self.root.bind('<Return>', self.on_enter_key)
+
+        # Initialize editing variables
+        self.editing_index = None
+        self.editing_column = None
+        self.entry = None
 
     def create_data_input_tab(self):
         # Tab for data input
@@ -92,6 +100,9 @@ class LactateTestApp:
         self.tree.heading("Power", text="Power (W)")
         self.tree.grid(row=6, column=0, sticky="nsew", padx=10, pady=5)
 
+        # Bind double-click to edit cell
+        self.tree.bind("<Double-1>", self.on_double_click)
+
         # Scrollbar for the treeview
         tree_scroll = ttk.Scrollbar(self.data_input_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscroll=tree_scroll.set)
@@ -129,7 +140,47 @@ class LactateTestApp:
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def on_enter_key(self, event):
-        self.add_data()
+        if self.entry:
+            self.update_cell()
+        else:
+            self.add_data()
+
+    def on_double_click(self, event):
+        # Start editing a cell on double-click
+        item = self.tree.selection()[0]
+        column = self.tree.identify_column(event.x)
+        row = self.tree.identify_row(event.y)
+        self.editing_index = int(self.tree.index(item))
+        self.editing_column = int(column[1:]) - 1
+        value = self.tree.item(item, "values")[self.editing_column]
+        self.entry = tk.Entry(self.data_input_frame)
+        self.entry.insert(0, value)
+        self.entry.bind("<Return>", lambda e: self.update_cell())
+        self.entry.grid(row=7, column=0, padx=10, pady=5)
+        self.entry.focus()
+
+    def update_cell(self):
+        # Update cell value and data structure
+        new_value = self.entry.get()
+        try:
+            if self.editing_column == 0:
+                new_value = float(new_value)
+                self.data["lactate"][self.editing_index] = new_value
+            elif self.editing_column == 1:
+                new_value = int(new_value)
+                self.data["heart_rate"][self.editing_index] = new_value
+            elif self.editing_column == 2:
+                new_value = int(new_value)
+                self.data["power"][self.editing_index] = new_value
+            self.tree.item(self.tree.selection()[0], values=(
+                self.data["lactate"][self.editing_index],
+                self.data["heart_rate"][self.editing_index],
+                self.data["power"][self.editing_index]
+            ))
+            self.entry.destroy()
+            self.entry = None
+        except ValueError:
+            messagebox.showerror("Invalid input", "Please enter a valid number.")
 
     def add_data(self):
         # Add data from input fields to the table and internal data structure
@@ -155,8 +206,7 @@ class LactateTestApp:
                 self.power_var.set("")
             except ValueError:
                 messagebox.showerror("Invalid input", "Please enter valid data for all fields.")
-        else:
-            messagebox.showerror("Missing data", "Please fill in all fields.")
+        
 
     def upload_excel(self):
         # Upload data from an Excel file
@@ -166,8 +216,8 @@ class LactateTestApp:
                 df = pd.read_excel(file_path)
                 self.load_data_from_dataframe(df)
             except Exception as e:
-                messagebox.showerror("Error", f"Failedto load Excel file: {e}")
-                
+                messagebox.showerror("Error", f"Failed to load Excel file: {e}")
+
     def load_data_from_dataframe(self, df):
         # Load data from a DataFrame
         for _, row in df.iterrows():
@@ -211,15 +261,7 @@ class LactateTestApp:
             self.fatmax_label.config(text=f"FATmax: {fatmax:.2f} W")
 
     def calculate_ftp_lt1_lt2_fatmax(self):
-        """
-        Calculate FTP, LT1, LT2, and FATmax based on lactate and power data.
-
-        Returns:
-            ftp_power (float): Estimated Functional Threshold Power (FTP).
-            lt1_power (float): Power at the first lactate threshold (LT1).
-            lt2_power (float): Power at the second lactate threshold (LT2).
-            fatmax_power (float): Power at which fat oxidation is maximized (Fatmax).
-        """
+        # Calculate FTP, LT1, LT2, and FATmax based on lactate and power data
         lactate = np.array(self.data["lactate"])
         power = np.array(self.data["power"])
 
@@ -227,24 +269,18 @@ class LactateTestApp:
             messagebox.showerror("Insufficient data", "Please add more data points to calculate FTP, LT1, LT2, and FATmax.")
             return None, None, None, None
 
-        # Baseline lactate is the first value
         baseline_lactate = lactate[0]
 
-        # LT1: The first significant rise in lactate (e.g., >0.5 mmol/L above baseline)
         lt1_index = np.argmax(lactate > (baseline_lactate + 0.5))
         lt1_power = power[lt1_index] if lt1_index > 0 else None
 
-        # LT2: The point where lactate rises rapidly (e.g., 4 mmol/L)
         lt2_index = np.argmax(lactate >= 4)
         lt2_power = power[lt2_index] if lt2_index > 0 else None
 
-        # FTP: Estimated as the power at LT2 minus an adjustment factor to reflect sustainable power
         ftp_power = lt2_power * 0.95 if lt2_power else power[-1]
 
-        # FATmax: Identified at moderate intensities before LT1
         fatmax_power = None
         if lt1_index > 0:
-            # Assuming FATmax occurs at the highest power before LT1
             fatmax_power = power[:lt1_index].max() if lt1_index > 0 else None
 
         return ftp_power, lt1_power, lt2_power, fatmax_power
@@ -289,7 +325,8 @@ class LactateTestApp:
         canvas = FigureCanvasTkAgg(figure, self.plot_frame)
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         canvas.draw()
-    
+
+# THIS RUNS THE PROGRAM        
 if __name__ == '__main__':
     root = tk.Tk()
     app = LactateTestApp(root)
