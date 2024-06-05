@@ -1,13 +1,17 @@
+import os
+import tempfile
 import tkinter as tk
 from tkinter import Canvas, ttk, messagebox, filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import matplotlib
-import matplotlib.pyplot
 import numpy as np
 import pandas as pd
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 
 matplotlib.use('Agg')
 
@@ -15,16 +19,18 @@ class LactateTestApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Lactate Test App")
-        self.root.geometry("1080x720")
+        self.root.geometry("2560x1600")
 
         self.data = {"lactate": [], "heart_rate": [], "power": []}
         self.results = {"FTP": None, "LT1": None, "LT2": None, "FATmax": None}
+        self.old_data = {"lactate": [], "heart_rate": [], "power": []}
 
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(fill=tk.BOTH, expand=True)
 
         self.create_data_input_tab()
         self.create_graph_tab()
+        self.create_compare_tab()
 
         self.root.bind('<Configure>', self.on_resize)
         self.root.bind('<Return>', self.on_enter_key)
@@ -94,7 +100,7 @@ class LactateTestApp:
         self.tree.heading("Power", text="Power (W)")
         self.tree.grid(row=6, column=0, sticky="nsew", padx=10, pady=5)
         self.tree.bind("<Double-1>", self.on_double_click)
-        self.tree.bind("<Return>", self.update_cell)
+        self.tree.bind("<Return>", self.on_enter_key)
 
         tree_scroll = ttk.Scrollbar(self.data_input_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscroll=tree_scroll.set)
@@ -125,6 +131,32 @@ class LactateTestApp:
         self.canvas.create_window((0, 0), window=self.plot_frame, anchor="nw")
 
         self.plot_frame.bind("<Configure>", self.on_frame_configure)
+        
+    def create_compare_tab(self):
+        # Tab for comparing tests
+        self.compare_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.compare_frame, text='Compare Tests')
+
+        button_frame = ttk.Frame(self.compare_frame)
+        button_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
+        button_frame.columnconfigure(0, weight=1)
+
+        ttk.Button(button_frame, text="Upload Old Test", command=self.upload_old_test).grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+        ttk.Button(button_frame, text="Compare Tests", command=self.compare_tests).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+
+        self.old_tree = ttk.Treeview(self.compare_frame, columns=("Lactate", "Heart Rate", "Power"), show='headings')
+        self.old_tree.heading("Lactate", text="Lactate (mmol/L)")
+        self.old_tree.heading("Heart Rate", text="Heart Rate (bpm)")
+        self.old_tree.heading("Power", text="Power (W)")
+        self.old_tree.grid(row=1, column=0, sticky="nsew", padx=10, pady=5)
+
+        tree_scroll = ttk.Scrollbar(self.compare_frame, orient="vertical", command=self.old_tree.yview)
+        self.old_tree.configure(yscroll=tree_scroll.set)
+        tree_scroll.grid(row=1, column=1, sticky="ns")
+
+        self.compare_frame.rowconfigure(1, weight=1)
+        self.compare_frame.columnconfigure(0, weight=1)
+
 
     def on_frame_configure(self, event):
         # Configure scroll region for canvas
@@ -137,17 +169,17 @@ class LactateTestApp:
         if self.entry:
             self.update_cell()
         else:
-           self.add_data()
-    
+            self.add_data()
+
     def on_double_click(self, event):
-    # Start editing a cell on double-click
+        # Start editing a cell on double-click
         item = self.tree.selection()[0]
         column = self.tree.identify_column(event.x)
         row = self.tree.identify_row(event.y)
         self.editing_index = int(self.tree.index(item))
         self.editing_column = int(column[1:]) - 1
         value = self.tree.item(item, "values")[self.editing_column]
-    
+
         # Positioning the Entry widget over the cell
         x, y, width, height = self.tree.bbox(item, column)
         self.entry = tk.Entry(self.tree, width=width)
@@ -155,6 +187,7 @@ class LactateTestApp:
         self.entry.place(x=x, y=y, width=width, height=height)
         self.entry.focus()
         self.entry.bind("<Return>", self.update_cell)
+        self.entry.bind("<FocusOut>", self.cancel_edit)
 
     def update_cell(self, event=None):
         # Update cell value and data structure
@@ -179,6 +212,12 @@ class LactateTestApp:
         except ValueError:
             messagebox.showerror("Invalid input", "Please enter a valid number.")
         finally:
+            self.entry.destroy()
+            self.entry = None
+
+    def cancel_edit(self, event=None):
+        # Cancel editing and remove the entry widget
+        if self.entry:
             self.entry.destroy()
             self.entry = None
 
@@ -330,15 +369,33 @@ class LactateTestApp:
         if not file_path:
             return
 
-        c = canvas.Canvas(file_path, pagesize=letter)
-        width, height = letter
+        # Recalculate the results before exporting
+        ftp, lt1, lt2, fatmax = self.calculate_ftp_lt1_lt2_fatmax()
+        self.results['FTP'] = ftp
+        self.results['LT1'] = lt1
+        self.results['LT2'] = lt2
+        self.results['FATmax'] = fatmax
 
-        c.setFont("Helvetica", 12)
-        c.drawString(30, height - 30, "Lactate Test Results")
-        c.drawString(30, height - 60, f"FTP: {self.results['FTP']:.2f} W" if self.results['FTP'] else "FTP: Not Calculated")
-        c.drawString(30, height - 90, f"LT1: {self.results['LT1']:.2f} W" if self.results['LT1'] else "LT1: Not Calculated")
-        c.drawString(30, height - 120, f"LT2: {self.results['LT2']:.2f} W" if self.results['LT2'] else "LT2: Not Calculated")
-        c.drawString(30, height - 150, f"FATmax: {self.results['FATmax']:.2f} W" if self.results['FATmax'] else "FATmax: Not Calculated")
+        pdf_doc = SimpleDocTemplate(file_path, pagesize=letter)
+        elements = []
+
+        styles = getSampleStyleSheet()
+        title_style = styles['Title']
+        normal_style = styles['BodyText']
+
+        elements.append(Paragraph("Lactate Test Results", title_style))
+        elements.append(Spacer(1, 12))
+
+        elements.append(Paragraph(f"FTP: {ftp:.2f} W" if ftp is not None else "FTP: Not Calculated", normal_style))
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph(f"LT1: {lt1:.2f} W" if lt1 is not None else "LT1: Not Calculated", normal_style))
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph(f"LT2: {lt2:.2f} W" if lt2 is not None else "LT2: Not Calculated", normal_style))
+        elements.append(Spacer(1, 12))
+        elements.append(Paragraph(f"FATmax: {fatmax:.2f} W" if fatmax is not None else "FATmax: Not Calculated", normal_style))
+        elements.append(Spacer(1, 24))
+
+        # Create the figure and save it as an image
         figure, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
         stages = list(range(1, len(self.data["lactate"]) + 1))
 
@@ -356,25 +413,34 @@ class LactateTestApp:
         ax3.set_title('Power Output')
         ax3.set_xlabel('Stage')
         ax3.set_ylabel('Power (W)')
-        
-        if self.results['FTP'] is not None:
-            ax3.axhline(y=self.results['FTP'], color='blue', linestyle='--', label=f'FTP: {self.results['FTP']:.2f} W')
-        if self.results['LT1'] is not None:
-            ax3.axhline(y=self.results['LT1'], color='orange', linestyle='--', label=f'LT1: {self.results['LT1']:.2f} W')
-        if self.results['LT2'] is not None:
-            ax3.axhline(y=self.results['LT2'], color='purple', linestyle='--', label=f'LT2: {self.results['LT2']:.2f} W')
-        if self.results['FATmax'] is not None:
-            ax3.axhline(y=self.results['FATmax'], color='cyan', linestyle='--', label=f'FATmax: {self.results['FATmax']:.2f} W')
+
+        if ftp is not None:
+            ax3.axhline(y=ftp, color='blue', linestyle='--', label=f'FTP: {ftp:.2f} W')
+        if lt1 is not None:
+            ax3.axhline(y=lt1, color='orange', linestyle='--', label=f'LT1: {lt1:.2f} W')
+        if lt2 is not None:
+            ax3.axhline(y=lt2, color='purple', linestyle='--', label=f'LT2: {lt2:.2f} W')
+        if fatmax is not None:
+            ax3.axhline(y=fatmax, color='cyan', linestyle='--', label=f'FATmax: {fatmax:.2f} W')
             ax3.legend()
-            
+
         figure.tight_layout()
 
-        pdf_image_path = file_path.replace(".pdf", ".png")
-        figure.savefig(pdf_image_path)
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmpfile:
+            pdf_image_path = tmpfile.name
+            figure.savefig(pdf_image_path, bbox_inches='tight')
+            plt.close(figure)
 
-        c.drawImage(pdf_image_path, 30, height - 550, width=500, preserveAspectRatio=True, mask='auto')
-        c.save()
+        # Add image to PDF
+        elements.append(Image(pdf_image_path, width=350, height=450, kind='proportional'))
 
+        # Build the PDF
+        pdf_doc.build(elements)
+
+        # Clean up the temporary file
+        if os.path.exists(pdf_image_path):
+            os.remove(pdf_image_path)
+            
     def export_to_csv(self):
         file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
         if not file_path:
@@ -391,6 +457,67 @@ class LactateTestApp:
         df = pd.DataFrame(self.data)
         df.to_excel(file_path, index=False)
         
+    def upload_old_test(self):
+    # Upload old test data from an Excel file
+        file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xls *.xlsx")])
+        if file_path:
+            try:
+                df = pd.read_excel(file_path)
+                self.load_old_data_from_dataframe(df)
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to load Excel file: {e}")
+
+    def load_old_data_from_dataframe(self, df):
+        # Load old data from a DataFrame
+        self.old_data = {"lactate": [], "heart_rate": [], "power": []}
+        for _, row in df.iterrows():
+            lactate = row['Lactate']
+            heart_rate = row['Heart Rate']
+            power = row['Power']
+            self.old_data["lactate"].append(lactate)
+            self.old_data["heart_rate"].append(heart_rate)
+            self.old_data["power"].append(power)
+            self.old_tree.insert("", "end", values=(lactate, heart_rate, power))
+
+    def compare_tests(self):
+        # Plot comparison of old and new test data
+        if not self.old_data["lactate"]:
+            messagebox.showerror("Error", "No old test data available for comparison.")
+            return
+
+        for widget in self.plot_frame.winfo_children():
+            widget.destroy()
+
+        figure, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
+
+        stages_new = list(range(1, len(self.data["lactate"]) + 1))
+        stages_old = list(range(1, len(self.old_data["lactate"]) + 1))
+
+        ax1.plot(stages_new, self.data["lactate"], marker='o', color='blue', label='New Test')
+        ax1.plot(stages_old, self.old_data["lactate"], marker='x', color='green', label='Old Test')
+        ax1.set_title('Lactate Levels')
+        ax1.set_xlabel('Stage')
+        ax1.set_ylabel('Lactate (mmol/L)')
+        ax1.legend()
+
+        ax2.plot(stages_new, self.data["heart_rate"], marker='o', color='red', label='New Test')
+        ax2.plot(stages_old, self.old_data["heart_rate"], marker='x', color='orange', label='Old Test')
+        ax2.set_title('Heart Rate')
+        ax2.set_xlabel('Stage')
+        ax2.set_ylabel('Heart Rate (bpm)')
+        ax2.legend()
+
+        ax3.plot(stages_new, self.data["power"], marker='o', color='green', label='New Test')
+        ax3.plot(stages_old, self.old_data["power"], marker='x', color='purple', label='Old Test')
+        ax3.set_title('Power Output')
+        ax3.set_xlabel('Stage')
+        ax3.set_ylabel('Power (W)')
+        ax3.legend()
+
+        figure.tight_layout()
+        canvas = FigureCanvasTkAgg(figure, self.plot_frame)
+        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        canvas.draw()
 
 # THIS RUNS THE PROGRAM        
 if __name__ == '__main__':
