@@ -1,4 +1,5 @@
 import os
+import platform
 import tempfile
 import tkinter as tk
 from tkinter import Canvas, ttk, messagebox, filedialog
@@ -150,8 +151,14 @@ class LactateTestApp:
         self.right_canvas.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         self.right_scrollbar = ttk.Scrollbar(self.canvas_frame, orient="vertical", command=self.right_canvas.yview)
         self.right_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.right_canvas.configure(yscrollcommand = self.right_scrollbar.set)
-        
+        self.right_canvas.configure(yscrollcommand=self.right_scrollbar.set)
+
+        # Bind mouse wheel events for scrolling
+        self.left_canvas.bind("<Enter>", lambda event: self._bind_mouse_wheel(event, self.left_canvas))
+        self.left_canvas.bind("<Leave>", lambda event: self._unbind_mouse_wheel(event, self.left_canvas))
+        self.right_canvas.bind("<Enter>", lambda event: self._bind_mouse_wheel(event, self.right_canvas))
+        self.right_canvas.bind("<Leave>", lambda event: self._unbind_mouse_wheel(event, self.right_canvas))
+
         # Frames inside canvases
         self.plot_frame = ttk.Frame(self.left_canvas)
         self.left_canvas.create_window((0, 0), window=self.plot_frame, anchor="nw")
@@ -161,6 +168,33 @@ class LactateTestApp:
         self.right_canvas.create_window((0, 0), window=self.compare_plot_frame, anchor="nw")
         self.compare_plot_frame.bind("<Configure>", self.on_frame_configure)
 
+    def _bind_mouse_wheel(self, event, canvas):
+        if platform.system() == 'Windows' or platform.system() == 'Linux':
+            canvas.bind_all("<MouseWheel>", self._on_mouse_wheel)
+        elif platform.system() == 'Darwin':  # macOS
+            canvas.bind_all("<Button-4>", self._on_mouse_wheel)
+            canvas.bind_all("<Button-5>", self._on_mouse_wheel)
+
+    def _unbind_mouse_wheel(self, event, canvas):
+        if platform.system() == 'Windows' or platform.system() == 'Linux':
+            canvas.unbind_all("<MouseWheel>")
+        elif platform.system() == 'Darwin':  # macOS
+            canvas.unbind_all("<Button-4>")
+            canvas.unbind_all("<Button-5>")
+
+    def _on_mouse_wheel(self, event):
+        if platform.system() == 'Windows' or platform.system() == 'Linux':
+            self._scroll_canvas(event, -1 if event.delta > 0 else 1)
+        elif platform.system() == 'Darwin':  # macOS
+            self._scroll_canvas(event, -1 if event.num == 4 else 1)
+
+    def _scroll_canvas(self, event, direction):
+        widget = event.widget.winfo_containing(event.x_root, event.y_root)
+        if widget == self.left_canvas:
+            self.left_canvas.yview_scroll(direction, "units")
+        elif widget == self.right_canvas:
+            self.right_canvas.yview_scroll(direction, "units")
+            
     def on_frame_configure(self, event):
         # Configure scroll region for canvas
         self.left_canvas.configure(scrollregion=self.left_canvas.bbox("all"))
@@ -542,18 +576,20 @@ class LactateTestApp:
 
         stages_new = list(range(1, len(self.data["lactate"]) + 1))
 
-        ax1.plot(stages_new, self.data["lactate"], marker='o', color='blue')
-        ax1.set_title('Lactate Levels')
+        ax1.plot(stages_new, self.data["lactate"], marker='o', color='blue', label='New Test')
+        ax1.set_title('Lactate Levels (New Test)')
         ax1.set_xlabel('Stage')
         ax1.set_ylabel('Lactate (mmol/L)')
+        ax1.legend()
 
-        ax2.plot(stages_new, self.data["heart_rate"], marker='o', color='red')
-        ax2.set_title('Heart Rate')
+        ax2.plot(stages_new, self.data["heart_rate"], marker='o', color='red', label='New Test')
+        ax2.set_title('Heart Rate (New Test)')
         ax2.set_xlabel('Stage')
         ax2.set_ylabel('Heart Rate (bpm)')
+        ax2.legend()
 
-        ax3.plot(stages_new, self.data["power"], marker='o', color='green')
-        ax3.set_title('Power Output')
+        ax3.plot(stages_new, self.data["power"], marker='o', color='green', label='New Test')
+        ax3.set_title('Power Output (New Test)')
         ax3.set_xlabel('Stage')
         ax3.set_ylabel('Power (W)')
 
@@ -584,19 +620,19 @@ class LactateTestApp:
             ax3.plot(stages_new, self.data["power"], marker='o', color='green', label='New Test')
 
         ax1.plot(stages_old, self.old_data["lactate"], marker='x', color='green', label='Old Test')
-        ax1.set_title('Lactate Levels')
+        ax1.set_title('Lactate Levels (Old Test)')
         ax1.set_xlabel('Stage')
         ax1.set_ylabel('Lactate (mmol/L)')
         ax1.legend()
 
         ax2.plot(stages_old, self.old_data["heart_rate"], marker='x', color='orange', label='Old Test')
-        ax2.set_title('Heart Rate')
+        ax2.set_title('Heart Rate (Old Test)')
         ax2.set_xlabel('Stage')
         ax2.set_ylabel('Heart Rate (bpm)')
         ax2.legend()
 
         ax3.plot(stages_old, self.old_data["power"], marker='x', color='purple', label='Old Test')
-        ax3.set_title('Power Output')
+        ax3.set_title('Power Output (Old Test)')
         ax3.set_xlabel('Stage')
         ax3.set_ylabel('Power (W)')
         ax3.legend()
