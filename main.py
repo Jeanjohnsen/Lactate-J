@@ -120,18 +120,27 @@ class LactateTestApp:
         # Scrollable area for plots
         self.canvas_frame = ttk.Frame(self.graph_frame)
         self.canvas_frame.pack(fill=tk.BOTH, expand=True)
-        self.canvas = tk.Canvas(self.canvas_frame)
-        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self.scrollbar = ttk.Scrollbar(self.canvas_frame, orient="vertical", command=self.canvas.yview)
-        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
-
-        # Frame inside canvas
-        self.plot_frame = ttk.Frame(self.canvas)
-        self.canvas.create_window((0, 0), window=self.plot_frame, anchor="nw")
-
-        self.plot_frame.bind("<Configure>", self.on_frame_configure)
         
+        self.left_canvas = tk.Canvas(self.canvas_frame)
+        self.left_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.left_scrollbar = ttk.Scrollbar(self.canvas_frame, orient="vertical", command=self.left_canvas.yview)
+        self.left_scrollbar.pack(side=tk.LEFT, fill=tk.Y)
+        self.left_canvas.configure(yscrollcommand=self.left_scrollbar.set)
+
+        self.right_canvas = tk.Canvas(self.canvas_frame)
+        self.right_canvas.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        self.right_scrollbar = ttk.Scrollbar(self.canvas_frame, orient="vertical", command=self.right_canvas.yview)
+        self.right_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.right_canvas.configure(yscrollcommand = self.right_scrollbar.set)
+            # Frames inside canvases
+        self.plot_frame = ttk.Frame(self.left_canvas)
+        self.left_canvas.create_window((0, 0), window=self.plot_frame, anchor="nw")
+        self.plot_frame.bind("<Configure>", self.on_frame_configure)
+
+        self.compare_plot_frame = ttk.Frame(self.right_canvas)
+        self.right_canvas.create_window((0, 0), window=self.compare_plot_frame, anchor="nw")
+        self.compare_plot_frame.bind("<Configure>", self.on_frame_configure)
+
     def create_compare_tab(self):
         # Tab for comparing tests
         self.compare_frame = ttk.Frame(self.notebook)
@@ -157,13 +166,14 @@ class LactateTestApp:
         self.compare_frame.rowconfigure(1, weight=1)
         self.compare_frame.columnconfigure(0, weight=1)
 
-
     def on_frame_configure(self, event):
         # Configure scroll region for canvas
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        self.left_canvas.configure(scrollregion=self.left_canvas.bbox("all"))
+        self.right_canvas.configure(scrollregion=self.right_canvas.bbox("all"))
 
     def on_resize(self, event):
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        self.left_canvas.configure(scrollregion=self.left_canvas.bbox("all"))
+        self.right_canvas.configure(scrollregion=self.right_canvas.bbox("all"))
 
     def on_enter_key(self, event):
         if self.entry:
@@ -330,7 +340,7 @@ class LactateTestApp:
         ftp, lt1, lt2, fatmax = self.calculate_ftp_lt1_lt2_fatmax()
 
         figure, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
-
+        
         stages = list(range(1, len(self.data["lactate"]) + 1))
 
         ax1.plot(stages, self.data["lactate"], marker='o', color='blue')
@@ -432,7 +442,7 @@ class LactateTestApp:
             plt.close(figure)
 
         # Add image to PDF
-        elements.append(Image(pdf_image_path, width=350, height=450, kind='proportional'))
+        elements.append(Image(pdf_image_path, width=500, height=600, kind='proportional'))
 
         # Build the PDF
         pdf_doc.build(elements)
@@ -440,7 +450,7 @@ class LactateTestApp:
         # Clean up the temporary file
         if os.path.exists(pdf_image_path):
             os.remove(pdf_image_path)
-            
+
     def export_to_csv(self):
         file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
         if not file_path:
@@ -456,9 +466,9 @@ class LactateTestApp:
 
         df = pd.DataFrame(self.data)
         df.to_excel(file_path, index=False)
-        
+
     def upload_old_test(self):
-    # Upload old test data from an Excel file
+        # Upload old test data from an Excel file
         file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xls *.xlsx")])
         if file_path:
             try:
@@ -485,7 +495,7 @@ class LactateTestApp:
             messagebox.showerror("Error", "No old test data available for comparison.")
             return
 
-        for widget in self.plot_frame.winfo_children():
+        for widget in self.compare_plot_frame.winfo_children():
             widget.destroy()
 
         figure, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
@@ -513,11 +523,12 @@ class LactateTestApp:
         ax3.set_xlabel('Stage')
         ax3.set_ylabel('Power (W)')
         ax3.legend()
-
+        
         figure.tight_layout()
-        canvas = FigureCanvasTkAgg(figure, self.plot_frame)
+        canvas = FigureCanvasTkAgg(figure, self.compare_plot_frame)
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         canvas.draw()
+        
 
 # THIS RUNS THE PROGRAM        
 if __name__ == '__main__':
