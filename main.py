@@ -61,38 +61,27 @@ class LactateTestApp:
 
         button_frame = ttk.Frame(self.data_input_frame)
         button_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=5)
-        button_frame.columnconfigure((0, 1, 2, 3, 4), weight=1)
+        button_frame.columnconfigure((0, 1, 2, 3, 4, 5), weight=1)
 
         ttk.Button(button_frame, text="Add Data", command=self.add_data).grid(row=0, column=0, padx=5, pady=5, sticky="ew")
         ttk.Button(button_frame, text="Plot Data", command=self.plot_data).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
         ttk.Button(button_frame, text="Upload Excel", command=self.upload_excel).grid(row=0, column=2, padx=5, pady=5, sticky="ew")
         ttk.Button(button_frame, text="Clear Data", command=self.clear_data).grid(row=0, column=3, padx=5, pady=5, sticky="ew")
         ttk.Button(button_frame, text="Export to PDF", command=self.export_to_pdf).grid(row=0, column=4, padx=5, pady=5, sticky="ew")
+        ttk.Button(button_frame, text="Calculate All", command=self.calculate_all).grid(row=0, column=5, padx=5, pady=5, sticky="ew")
 
-        # Labels and buttons for FTP, LT1, LT2, and FATmax calculations
-        self.ftp_frame = ttk.Frame(self.data_input_frame)
-        self.ftp_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=5)
-        self.ftp_label = ttk.Label(self.ftp_frame, text="FTP: Not Calculated")
-        self.ftp_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        ttk.Button(self.ftp_frame, text="Calculate FTP", command=self.calculate_ftp).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        # Labels for FTP, LT1, LT2, and FATmax results
+        self.ftp_label = ttk.Label(self.data_input_frame, text="FTP: Not Calculated")
+        self.ftp_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
 
-        self.lt1_frame = ttk.Frame(self.data_input_frame)
-        self.lt1_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=5)
-        self.lt1_label = ttk.Label(self.lt1_frame, text="LT1: Not Calculated")
-        self.lt1_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        ttk.Button(self.lt1_frame, text="Calculate LT1", command=self.calculate_lt1).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        self.lt1_label = ttk.Label(self.data_input_frame, text="LT1: Not Calculated")
+        self.lt1_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
 
-        self.lt2_frame = ttk.Frame(self.data_input_frame)
-        self.lt2_frame.grid(row=4, column=0, sticky="ew", padx=10, pady=5)
-        self.lt2_label = ttk.Label(self.lt2_frame, text="LT2: Not Calculated")
-        self.lt2_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        ttk.Button(self.lt2_frame, text="Calculate LT2", command=self.calculate_lt2).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        self.lt2_label = ttk.Label(self.data_input_frame, text="LT2: Not Calculated")
+        self.lt2_label.grid(row=4, column=0, padx=10, pady=5, sticky="w")
 
-        self.fatmax_frame = ttk.Frame(self.data_input_frame)
-        self.fatmax_frame.grid(row=5, column=0, sticky="ew", padx=10, pady=5)
-        self.fatmax_label = ttk.Label(self.fatmax_frame, text="FATmax: Not Calculated")
-        self.fatmax_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        ttk.Button(self.fatmax_frame, text="Calculate FATmax", command=self.calculate_fatmax).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        self.fatmax_label = ttk.Label(self.data_input_frame, text="FATmax: Not Calculated")
+        self.fatmax_label.grid(row=5, column=0, padx=10, pady=5, sticky="w")
 
         self.tree = ttk.Treeview(self.data_input_frame, columns=("Lactate", "Heart Rate", "Power"), show='headings')
         self.tree.heading("Lactate", text="Lactate (mmol/L)")
@@ -112,7 +101,7 @@ class LactateTestApp:
 
         ttk.Button(self.data_input_frame, text="Export Table to CSV", command=self.export_to_csv).grid(row=7, column=0, padx=5, pady=5, sticky="ew")
         ttk.Button(self.data_input_frame, text="Export Table to Excel", command=self.export_to_excel).grid(row=8, column=0, padx=5, pady=5, sticky="ew")
-
+                                                                                                       
     def create_compare_tab(self):
         # Tab for comparing tests
         self.compare_frame = ttk.Frame(self.notebook)
@@ -290,6 +279,9 @@ class LactateTestApp:
         self.lt2_label.config(text="LT2: Not Calculated")
         self.fatmax_label.config(text="FATmax: Not Calculated")
 
+    """
+    OLD METHOD FOR CALCULATING THE RESULTS ONE BY ONE
+    
     def calculate_ftp(self):
         ftp, _, _, _ = self.calculate_ftp_lt1_lt2_fatmax()
         if ftp is not None:
@@ -308,7 +300,22 @@ class LactateTestApp:
     def calculate_fatmax(self):
         _, _, _, fatmax = self.calculate_ftp_lt1_lt2_fatmax()
         if fatmax is not None:
-            self.fatmax_label.config(text=f"FATmax: {fatmax:.2f} W")
+            self.fatmax_label.config(text=f"FATmax: {fatmax:.2f} W")"""
+            
+    def calculate_all(self):
+        ftp, lt1, lt2, fatmax = self.calculate_ftp_lt1_lt2_fatmax()
+
+        # Store the results in the data structure
+        self.results['FTP'] = ftp
+        self.results['LT1'] = lt1
+        self.results['LT2'] = lt2
+        self.results['FATmax'] = fatmax
+
+        # Update the labels with the calculated results
+        self.ftp_label.config(text=f"FTP: {ftp:.2f} W" if ftp is not None else "FTP: Not Calculated")
+        self.lt1_label.config(text=f"LT1: {lt1:.2f} W" if lt1 is not None else "LT1: Not Calculated")
+        self.lt2_label.config(text=f"LT2: {lt2:.2f} W" if lt2 is not None else "LT2: Not Calculated")
+        self.fatmax_label.config(text=f"FATmax: {fatmax:.2f} W" if fatmax is not None else "FATmax: Not Calculated")
 
     def calculate_ftp_lt1_lt2_fatmax(self):
         """
