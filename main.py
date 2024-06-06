@@ -1,21 +1,8 @@
 import os
-import platform
 import tempfile
 import tkinter as tk
-from tkinter import Canvas, ttk, messagebox, filedialog
-import matplotlib
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
-
-matplotlib.use('Agg')
-
+from tkinter import ttk, messagebox, filedialog
+import platform
 
 class LactateTestApp:
     def __init__(self, root):
@@ -49,141 +36,43 @@ class LactateTestApp:
         input_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
         input_frame.columnconfigure(1, weight=1)
 
-        ttk.Label(input_frame, text="Lactate (mmol/L):").grid(column=0,
-                                                              row=0, padx=5, pady=5, sticky="w")
+        ttk.Label(input_frame, text="Lactate (mmol/L):").grid(column=0, row=0, padx=5, pady=5, sticky="w")
         self.lactate_var = tk.StringVar()
-        ttk.Entry(
-            input_frame,
-            textvariable=self.lactate_var).grid(
-            column=1,
-            row=0,
-            padx=5,
-            pady=5,
-            sticky="ew")
+        ttk.Entry(input_frame, textvariable=self.lactate_var).grid(column=1, row=0, padx=5, pady=5, sticky="ew")
 
-        ttk.Label(
-            input_frame,
-            text="Heart Rate (bpm):").grid(
-            column=0,
-            row=1,
-            padx=5,
-            pady=5,
-            sticky="w")
+        ttk.Label(input_frame, text="Heart Rate (bpm):").grid(column=0, row=1, padx=5, pady=5, sticky="w")
         self.hr_var = tk.StringVar()
-        ttk.Entry(
-            input_frame,
-            textvariable=self.hr_var).grid(
-            column=1,
-            row=1,
-            padx=5,
-            pady=5,
-            sticky="ew")
+        ttk.Entry(input_frame, textvariable=self.hr_var).grid(column=1, row=1, padx=5, pady=5, sticky="ew")
 
-        ttk.Label(
-            input_frame,
-            text="Power (W):").grid(
-            column=0,
-            row=2,
-            padx=5,
-            pady=5,
-            sticky="w")
+        ttk.Label(input_frame, text="Power (W):").grid(column=0, row=2, padx=5, pady=5, sticky="w")
         self.power_var = tk.StringVar()
-        ttk.Entry(
-            input_frame,
-            textvariable=self.power_var).grid(
-            column=1,
-            row=2,
-            padx=5,
-            pady=5,
-            sticky="ew")
+        ttk.Entry(input_frame, textvariable=self.power_var).grid(column=1, row=2, padx=5, pady=5, sticky="ew")
 
         button_frame = ttk.Frame(self.data_input_frame)
         button_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=5)
         button_frame.columnconfigure((0, 1, 2, 3, 4, 5), weight=1)
 
-        ttk.Button(
-            button_frame,
-            text="Add Data",
-            command=self.add_data).grid(
-            row=0,
-            column=0,
-            padx=5,
-            pady=5,
-            sticky="ew")
-        ttk.Button(
-            button_frame,
-            text="Plot Data",
-            command=self.plot_data).grid(
-            row=0,
-            column=1,
-            padx=5,
-            pady=5,
-            sticky="ew")
-        ttk.Button(
-            button_frame,
-            text="Upload Excel",
-            command=self.upload_excel).grid(
-            row=0,
-            column=2,
-            padx=5,
-            pady=5,
-            sticky="ew")
-        ttk.Button(
-            button_frame,
-            text="Clear Data",
-            command=self.clear_data).grid(
-            row=0,
-            column=3,
-            padx=5,
-            pady=5,
-            sticky="ew")
-        ttk.Button(
-            button_frame,
-            text="Export to PDF",
-            command=self.export_to_pdf).grid(
-            row=0,
-            column=4,
-            padx=5,
-            pady=5,
-            sticky="ew")
-        ttk.Button(
-            button_frame,
-            text="Calculate All",
-            command=self.calculate_all).grid(
-            row=0,
-            column=5,
-            padx=5,
-            pady=5,
-            sticky="ew")
+        ttk.Button(button_frame, text="Add Data", command=self.add_data).grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+        ttk.Button(button_frame, text="Plot Data", command=self.plot_data).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        ttk.Button(button_frame, text="Upload Excel", command=self.upload_excel).grid(row=0, column=2, padx=5, pady=5, sticky="ew")
+        ttk.Button(button_frame, text="Clear Data", command=self.clear_data).grid(row=0, column=3, padx=5, pady=5, sticky="ew")
+        ttk.Button(button_frame, text="Export to PDF", command=self.export_to_pdf).grid(row=0, column=4, padx=5, pady=5, sticky="ew")
+        ttk.Button(button_frame, text="Calculate All", command=self.calculate_all).grid(row=0, column=5, padx=5, pady=5, sticky="ew")
 
         # Labels for FTP, LT1, LT2, and FATmax results
-        self.ftp_label = ttk.Label(
-            self.data_input_frame,
-            text="FTP: Not Calculated")
+        self.ftp_label = ttk.Label(self.data_input_frame, text="FTP: Not Calculated")
         self.ftp_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
 
-        self.lt1_label = ttk.Label(
-            self.data_input_frame,
-            text="LT1: Not Calculated")
+        self.lt1_label = ttk.Label(self.data_input_frame, text="LT1: Not Calculated")
         self.lt1_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
 
-        self.lt2_label = ttk.Label(
-            self.data_input_frame,
-            text="LT2: Not Calculated")
+        self.lt2_label = ttk.Label(self.data_input_frame, text="LT2: Not Calculated")
         self.lt2_label.grid(row=4, column=0, padx=10, pady=5, sticky="w")
 
-        self.fatmax_label = ttk.Label(
-            self.data_input_frame,
-            text="FATmax: Not Calculated")
+        self.fatmax_label = ttk.Label(self.data_input_frame, text="FATmax: Not Calculated")
         self.fatmax_label.grid(row=5, column=0, padx=10, pady=5, sticky="w")
 
-        self.tree = ttk.Treeview(
-            self.data_input_frame,
-            columns=(
-                "Lactate",
-                "Heart Rate",
-                "Power"),
-            show='headings')
+        self.tree = ttk.Treeview(self.data_input_frame, columns=("Lactate", "Heart Rate", "Power"), show='headings')
         self.tree.heading("Lactate", text="Lactate (mmol/L)")
         self.tree.heading("Heart Rate", text="Heart Rate (bpm)")
         self.tree.heading("Power", text="Power (W)")
@@ -191,10 +80,7 @@ class LactateTestApp:
         self.tree.bind("<Double-1>", self.on_double_click)
         self.tree.bind("<Return>", self.on_enter_key)
 
-        tree_scroll = ttk.Scrollbar(
-            self.data_input_frame,
-            orient="vertical",
-            command=self.tree.yview)
+        tree_scroll = ttk.Scrollbar(self.data_input_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscroll=tree_scroll.set)
         tree_scroll.grid(row=6, column=1, sticky="ns")
 
@@ -202,24 +88,8 @@ class LactateTestApp:
         self.data_input_frame.rowconfigure(6, weight=1)
         self.data_input_frame.columnconfigure(0, weight=1)
 
-        ttk.Button(
-            self.data_input_frame,
-            text="Export Table to CSV",
-            command=self.export_to_csv).grid(
-            row=7,
-            column=0,
-            padx=5,
-            pady=5,
-            sticky="ew")
-        ttk.Button(
-            self.data_input_frame,
-            text="Export Table to Excel",
-            command=self.export_to_excel).grid(
-            row=8,
-            column=0,
-            padx=5,
-            pady=5,
-            sticky="ew")
+        ttk.Button(self.data_input_frame, text="Export Table to CSV", command=self.export_to_csv).grid(row=7, column=0, padx=5, pady=5, sticky="ew")
+        ttk.Button(self.data_input_frame, text="Export Table to Excel", command=self.export_to_excel).grid(row=8, column=0, padx=5, pady=5, sticky="ew")
 
     def create_compare_tab(self):
         # Tab for comparing tests
@@ -333,31 +203,27 @@ class LactateTestApp:
         self.compare_plot_frame.bind("<Configure>", self.on_frame_configure)
 
     def _bind_mouse_wheel(self, event, canvas):
-        if platform.system() == 'Windows' or platform.system() == 'Linux':
-            canvas.bind_all("<MouseWheel>", self._on_mouse_wheel)
-        elif platform.system() == 'Darwin':  # macOS
-            canvas.bind_all("<Button-4>", self._on_mouse_wheel)
-            canvas.bind_all("<Button-5>", self._on_mouse_wheel)
+        if platform.system() == 'Windows':
+            canvas.bind_all("<MouseWheel>", lambda e: self._on_mouse_wheel(e, canvas))
+        else:
+            canvas.bind_all("<Button-4>", lambda e: self._on_mouse_wheel(e, canvas))
+            canvas.bind_all("<Button-5>", lambda e: self._on_mouse_wheel(e, canvas))
 
     def _unbind_mouse_wheel(self, event, canvas):
-        if platform.system() == 'Windows' or platform.system() == 'Linux':
+        if platform.system() == 'Windows':
             canvas.unbind_all("<MouseWheel>")
-        elif platform.system() == 'Darwin':  # macOS
+        else:
             canvas.unbind_all("<Button-4>")
             canvas.unbind_all("<Button-5>")
 
-    def _on_mouse_wheel(self, event):
-        if platform.system() == 'Windows' or platform.system() == 'Linux':
-            self._scroll_canvas(event, -1 if event.delta > 0 else 1)
-        elif platform.system() == 'Darwin':  # macOS
-            self._scroll_canvas(event, -1 if event.num == 4 else 1)
-
-    def _scroll_canvas(self, event, direction):
-        widget = event.widget.winfo_containing(event.x_root, event.y_root)
-        if widget == self.left_canvas:
-            self.left_canvas.yview_scroll(direction, "units")
-        elif widget == self.right_canvas:
-            self.right_canvas.yview_scroll(direction, "units")
+    def _on_mouse_wheel(self, event, canvas):
+        if platform.system() == 'Windows':
+            canvas.yview_scroll(-1 * int(event.delta / 120), "units")
+        else:
+            if event.num == 4:
+                canvas.yview_scroll(-1, "units")
+            elif event.num == 5:
+                canvas.yview_scroll(1, "units")
 
     def on_frame_configure(self, event):
         # Configure scroll region for canvas
@@ -413,9 +279,7 @@ class LactateTestApp:
                 self.data["power"][self.editing_index]
             ))
         except ValueError:
-            messagebox.showerror(
-                "Invalid input",
-                "Please enter a valid number.")
+            messagebox.showerror("Invalid input", "Please enter a valid number.")
         finally:
             self.entry.destroy()
             self.entry = None
@@ -442,30 +306,25 @@ class LactateTestApp:
                 self.data["heart_rate"].append(heart_rate)
                 self.data["power"].append(power)
 
-                self.tree.insert(
-                    "", "end", values=(
-                        lactate, heart_rate, power))
+                self.tree.insert("", "end", values=(lactate, heart_rate, power))
 
                 # Clear input fields
                 self.lactate_var.set("")
                 self.hr_var.set("")
                 self.power_var.set("")
             except ValueError:
-                messagebox.showerror(
-                    "Invalid input",
-                    "Please enter valid data for all fields.")
+                messagebox.showerror("Invalid input", "Please enter valid data for all fields.")
 
     def upload_excel(self):
+        import pandas as pd
         # Upload data from an Excel file
-        file_path = filedialog.askopenfilename(
-            filetypes=[("Excel files", "*.xls *.xlsx")])
+        file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xls *.xlsx")])
         if file_path:
             try:
                 df = pd.read_excel(file_path)
                 self.load_data_from_dataframe(df)
             except Exception as e:
-                messagebox.showerror(
-                    "Error", f"Failed to load Excel file: {e}")
+                messagebox.showerror("Error", f"Failed to load Excel file: {e}")
 
     def load_data_from_dataframe(self, df):
         # Load data from a DataFrame
@@ -489,29 +348,6 @@ class LactateTestApp:
         self.lt2_label.config(text="LT2: Not Calculated")
         self.fatmax_label.config(text="FATmax: Not Calculated")
 
-    """
-    OLD METHOD FOR CALCULATING THE RESULTS ONE BY ONE
-
-    def calculate_ftp(self):
-        ftp, _, _, _ = self.calculate_ftp_lt1_lt2_fatmax()
-        if ftp is not None:
-            self.ftp_label.config(text=f"FTP: {ftp:.2f} W")
-
-    def calculate_lt1(self):
-        _, lt1, _, _ = self.calculate_ftp_lt1_lt2_fatmax()
-        if lt1 is not None:
-            self.lt1_label.config(text=f"LT1: {lt1:.2f} W")
-
-    def calculate_lt2(self):
-        _, _, lt2, _ = self.calculate_ftp_lt1_lt2_fatmax()
-        if lt2 is not None:
-            self.lt2_label.config(text=f"LT2: {lt2:.2f} W")
-
-    def calculate_fatmax(self):
-        _, _, _, fatmax = self.calculate_ftp_lt1_lt2_fatmax()
-        if fatmax is not None:
-            self.fatmax_label.config(text=f"FATmax: {fatmax:.2f} W")"""
-
     def calculate_all(self):
         ftp, lt1, lt2, fatmax = self.calculate_ftp_lt1_lt2_fatmax()
 
@@ -522,20 +358,13 @@ class LactateTestApp:
         self.results['FATmax'] = fatmax
 
         # Update the labels with the calculated results
-        self.ftp_label.config(
-            text=f"FTP: {
-                ftp:.2f} W" if ftp is not None else "FTP: Not Calculated")
-        self.lt1_label.config(
-            text=f"LT1: {
-                lt1:.2f} W" if lt1 is not None else "LT1: Not Calculated")
-        self.lt2_label.config(
-            text=f"LT2: {
-                lt2:.2f} W" if lt2 is not None else "LT2: Not Calculated")
-        self.fatmax_label.config(
-            text=f"FATmax: {
-                fatmax:.2f} W" if fatmax is not None else "FATmax: Not Calculated")
+        self.ftp_label.config(text=f"FTP: {ftp:.2f} W" if ftp is not None else "FTP: Not Calculated")
+        self.lt1_label.config(text=f"LT1: {lt1:.2f} W" if lt1 is not None else "LT1: Not Calculated")
+        self.lt2_label.config(text=f"LT2: {lt2:.2f} W" if lt2 is not None else "LT2: Not Calculated")
+        self.fatmax_label.config(text=f"FATmax: {fatmax:.2f} W" if fatmax is not None else "FATmax: Not Calculated")
 
     def calculate_ftp_lt1_lt2_fatmax(self):
+        import numpy as np
         """
         Calculate FTP, LT1, LT2, and FATmax based on lactate and power data.
 
@@ -545,24 +374,20 @@ class LactateTestApp:
             lt2_power (float): Power at the second lactate threshold (LT2).
             fatmax_power (float): Power at which fat oxidation is maximized (Fatmax).
         """
-
+        
         lactate = np.array(self.data["lactate"])
         power = np.array(self.data["power"])
 
         if len(lactate) < 4:
-            messagebox.showerror(
-                "Insufficient data",
-                "Please add more data points to calculate FTP, LT1, LT2, and FATmax.")
+            messagebox.showerror("Insufficient data", "Please add more data points to calculate FTP, LT1, LT2, and FATmax.")
             return None, None, None, None
 
         # Find LT1: the first significant rise in lactate within 1.5-2.0 mmol/L
         lt1_index = np.argmax((lactate[1:] >= 1.5) & (lactate[1:] <= 2.0)) + 1
         lt1_power = power[lt1_index] if lt1_index > 0 else None
 
-        # Find LT2: the next significant rise in lactate within 3.0-6.0 mmol/L
-        # after LT1
-        lt2_index = np.argmax(
-            (lactate[lt1_index + 1:] >= 3.0) & (lactate[lt1_index + 1:] <= 6.0)) + lt1_index + 1
+        # Find LT2: the next significant rise in lactate within 3.0-6.0 mmol/L after LT1
+        lt2_index = np.argmax((lactate[lt1_index+1:] >= 3.0) & (lactate[lt1_index+1:] <= 6.0)) + lt1_index + 1
         lt2_power = power[lt2_index] if lt2_index > lt1_index else None
 
         # FTP: Typically 5-10% above LT2
@@ -574,76 +399,40 @@ class LactateTestApp:
         return ftp_power, lt1_power, lt2_power, fatmax_power
 
     def plot_data(self):
+        import matplotlib.pyplot as plt
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
 
         ftp, lt1, lt2, fatmax = self.calculate_ftp_lt1_lt2_fatmax()
 
         figure, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
-
+        
         stages = list(range(1, len(self.data["lactate"]) + 1))
 
-        ax1.plot(
-            stages,
-            self.data["lactate"],
-            marker='o',
-            color='blue',
-            label='New Test')
+        ax1.plot(stages, self.data["lactate"], marker='o', color='blue', label='New Test')
         ax1.set_title('Lactate Levels')
         ax1.set_xlabel('Stage')
         ax1.set_ylabel('Lactate (mmol/L)')
-        ax1.legend()
 
-        ax2.plot(
-            stages,
-            self.data["heart_rate"],
-            marker='o',
-            color='red',
-            label='New Test')
+        ax2.plot(stages, self.data["heart_rate"], marker='o', color='red', label='New Test')
         ax2.set_title('Heart Rate')
         ax2.set_xlabel('Stage')
         ax2.set_ylabel('Heart Rate (bpm)')
-        ax2.legend()
 
-        ax3.plot(
-            stages,
-            self.data["power"],
-            marker='o',
-            color='green',
-            label='New Test')
+        ax3.plot(stages, self.data["power"], marker='o', color='green', label='New Test')
         ax3.set_title('Power Output')
         ax3.set_xlabel('Stage')
         ax3.set_ylabel('Power (W)')
-        ax3.legend()
 
         if ftp is not None:
-            ax3.axhline(
-                y=ftp,
-                color='blue',
-                linestyle='--',
-                label=f'FTP: {
-                    ftp:.2f} W')
+            ax3.axhline(y=ftp, color='blue', linestyle='--', label=f'FTP: {ftp:.2f} W')
         if lt1 is not None:
-            ax3.axhline(
-                y=lt1,
-                color='orange',
-                linestyle='--',
-                label=f'LT1: {
-                    lt1:.2f} W')
+            ax3.axhline(y=lt1, color='orange', linestyle='--', label=f'LT1: {lt1:.2f} W')
         if lt2 is not None:
-            ax3.axhline(
-                y=lt2,
-                color='purple',
-                linestyle='--',
-                label=f'LT2: {
-                    lt2:.2f} W')
+            ax3.axhline(y=lt2, color='purple', linestyle='--', label=f'LT2: {lt2:.2f} W')
         if fatmax is not None:
-            ax3.axhline(
-                y=fatmax,
-                color='cyan',
-                linestyle='--',
-                label=f'FATmax: {
-                    fatmax:.2f} W')
+            ax3.axhline(y=fatmax, color='cyan', linestyle='--', label=f'FATmax: {fatmax:.2f} W')
 
         ax3.legend()
 
@@ -651,11 +440,15 @@ class LactateTestApp:
         canvas = FigureCanvasTkAgg(figure, self.plot_frame)
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         canvas.draw()
-
+        
     def export_to_pdf(self):
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=".pdf", filetypes=[
-                ("PDF files", "*.pdf")])
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+        import matplotlib.pyplot as plt
+        import tempfile
+        import pandas as pd
+        file_path = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF files", "*.pdf")])
         if not file_path:
             return
 
@@ -676,29 +469,13 @@ class LactateTestApp:
         elements.append(Paragraph("Lactate Test Results", title_style))
         elements.append(Spacer(1, 12))
 
-        elements.append(
-            Paragraph(
-                f"FTP: {
-                    ftp:.2f} W. Calculated approx. 5-10% above LT2" if ftp is not None else "FTP: Not Calculated",
-                normal_style))
+        elements.append(Paragraph(f"FTP: {ftp:.2f} W. Calculated approx. 5-10% above LT2" if ftp is not None else "FTP: Not Calculated", normal_style))
         elements.append(Spacer(1, 12))
-        elements.append(
-            Paragraph(
-                f"LT1: {
-                    lt1:.2f} W. Calculated approx. 1.5 - 2.0 mmol/L" if lt1 is not None else "LT1: Not Calculated",
-                normal_style))
+        elements.append(Paragraph(f"LT1: {lt1:.2f} W. Calculated approx. 1.5 - 2.0 mmol/L" if lt1 is not None else "LT1: Not Calculated", normal_style))
         elements.append(Spacer(1, 12))
-        elements.append(
-            Paragraph(
-                f"LT2: {
-                    lt2:.2f} W. Calculated approx. 3.0 - 6.0 mmol/L" if lt2 is not None else "LT2: Not Calculated",
-                normal_style))
+        elements.append(Paragraph(f"LT2: {lt2:.2f} W. Calculated approx. 3.0 - 6.0 mmol/L" if lt2 is not None else "LT2: Not Calculated", normal_style))
         elements.append(Spacer(1, 12))
-        elements.append(
-            Paragraph(
-                f"FATmax: {
-                    fatmax:.2f} W. Calculated approx. 90-100% below LT1" if fatmax is not None else "FATmax: Not Calculated",
-                normal_style))
+        elements.append(Paragraph(f"FATmax: {fatmax:.2f} W. Calculated approx. 90-100% below LT1" if fatmax is not None else "FATmax: Not Calculated", normal_style))
         elements.append(Spacer(1, 24))
 
         # Create the figure and save it as an image
@@ -721,33 +498,13 @@ class LactateTestApp:
         ax3.set_ylabel('Power (W)')
 
         if ftp is not None:
-            ax3.axhline(
-                y=ftp,
-                color='blue',
-                linestyle='--',
-                label=f'FTP: {
-                    ftp:.2f} W')
+            ax3.axhline(y=ftp, color='blue', linestyle='--', label=f'FTP: {ftp:.2f} W')
         if lt1 is not None:
-            ax3.axhline(
-                y=lt1,
-                color='orange',
-                linestyle='--',
-                label=f'LT1: {
-                    lt1:.2f} W')
+            ax3.axhline(y=lt1, color='orange', linestyle='--', label=f'LT1: {lt1:.2f} W')
         if lt2 is not None:
-            ax3.axhline(
-                y=lt2,
-                color='purple',
-                linestyle='--',
-                label=f'LT2: {
-                    lt2:.2f} W')
+            ax3.axhline(y=lt2, color='purple', linestyle='--', label=f'LT2: {lt2:.2f} W')
         if fatmax is not None:
-            ax3.axhline(
-                y=fatmax,
-                color='cyan',
-                linestyle='--',
-                label=f'FATmax: {
-                    fatmax:.2f} W')
+            ax3.axhline(y=fatmax, color='cyan', linestyle='--', label=f'FATmax: {fatmax:.2f} W')
             ax3.legend()
 
         figure.tight_layout()
@@ -758,12 +515,7 @@ class LactateTestApp:
             plt.close(figure)
 
         # Add image to PDF
-        elements.append(
-            Image(
-                pdf_image_path,
-                width=500,
-                height=600,
-                kind='proportional'))
+        elements.append(Image(pdf_image_path, width=500, height=600, kind='proportional'))
 
         # Build the PDF
         pdf_doc.build(elements)
@@ -773,9 +525,8 @@ class LactateTestApp:
             os.remove(pdf_image_path)
 
     def export_to_csv(self):
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=".csv", filetypes=[
-                ("CSV files", "*.csv")])
+        import pandas as pd
+        file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
         if not file_path:
             return
 
@@ -783,9 +534,8 @@ class LactateTestApp:
         df.to_csv(file_path, index=False)
 
     def export_to_excel(self):
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=".xlsx", filetypes=[
-                ("Excel files", "*.xlsx")])
+        import pandas as pd
+        file_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
         if not file_path:
             return
 
@@ -793,20 +543,23 @@ class LactateTestApp:
         df.to_excel(file_path, index=False)
 
     def upload_old_test(self):
+        import pandas as pd
         # Upload old test data from an Excel file
-        file_path = filedialog.askopenfilename(
-            filetypes=[("Excel files", "*.xls *.xlsx")])
+        file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xls *.xlsx")])
         if file_path:
             try:
                 df = pd.read_excel(file_path)
                 self.load_old_data_from_dataframe(df)
             except Exception as e:
-                messagebox.showerror(
-                    "Error", f"Failed to load Excel file: {e}")
+                messagebox.showerror("Error", f"Failed to load Excel file: {e}")
 
     def load_old_data_from_dataframe(self, df):
         # Load old data from a DataFrame
-        self.old_data = {"lactate": [], "heart_rate": [], "power": []}
+        for key in self.old_data:
+            self.old_data[key].clear()
+        for item in self.old_tree.get_children():
+            self.old_tree.delete(item)
+
         for _, row in df.iterrows():
             lactate = row['Lactate']
             heart_rate = row['Heart Rate']
@@ -814,11 +567,11 @@ class LactateTestApp:
             self.old_data["lactate"].append(lactate)
             self.old_data["heart_rate"].append(heart_rate)
             self.old_data["power"].append(power)
-            self.old_tree.insert(
-                "", "end", values=(
-                    lactate, heart_rate, power))
+            self.old_tree.insert("", "end", values=(lactate, heart_rate, power))
 
     def compare_tests(self):
+        import matplotlib.pyplot as plt
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
         # Plot comparison of old and new test data
         if not self.old_data["lactate"]:
             messagebox.showerror(
@@ -997,8 +750,8 @@ class LactateTestApp:
         old_canvas.draw()
 
     def calculate_old_ftp_lt1_lt2_fatmax(self):
-        # Calculate FTP, LT1, LT2, and FATmax based on old lactate and power
-        # data
+        import numpy as np
+        # Calculate FTP, LT1, LT2, and FATmax based on old lactate and power data
         lactate = np.array(self.old_data["lactate"])
         power = np.array(self.old_data["power"])
 
@@ -1022,7 +775,7 @@ class LactateTestApp:
         return ftp_power, lt1_power, lt2_power, fatmax_power
 
 
-# THIS RUNS THE PROGRAM
+# THIS RUNS THE PROGRAM        
 if __name__ == '__main__':
     root = tk.Tk()
     app = LactateTestApp(root)
