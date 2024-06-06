@@ -29,8 +29,8 @@ class LactateTestApp:
         self.notebook.pack(fill=tk.BOTH, expand=True)
 
         self.create_data_input_tab()
-        self.create_graph_tab()
         self.create_compare_tab()
+        self.create_graph_tab()
 
         self.root.bind('<Configure>', self.on_resize)
         self.root.bind('<Return>', self.on_enter_key)
@@ -106,12 +106,38 @@ class LactateTestApp:
         self.tree.configure(yscroll=tree_scroll.set)
         tree_scroll.grid(row=6, column=1, sticky="ns")
 
-        self.data_input_frame.rowconfigure(10, weight=1)
+        # Adjust the row/column configurations for resizing
+        self.data_input_frame.rowconfigure(6, weight=1)
         self.data_input_frame.columnconfigure(0, weight=1)
 
         ttk.Button(self.data_input_frame, text="Export Table to CSV", command=self.export_to_csv).grid(row=7, column=0, padx=5, pady=5, sticky="ew")
         ttk.Button(self.data_input_frame, text="Export Table to Excel", command=self.export_to_excel).grid(row=8, column=0, padx=5, pady=5, sticky="ew")
 
+    def create_compare_tab(self):
+        # Tab for comparing tests
+        self.compare_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.compare_frame, text='Compare Tests')
+
+        button_frame = ttk.Frame(self.compare_frame)
+        button_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
+        button_frame.columnconfigure(0, weight=1)
+
+        ttk.Button(button_frame, text="Upload Old Test", command=self.upload_old_test).grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+        ttk.Button(button_frame, text="Compare Tests", command=self.compare_tests).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+
+        self.old_tree = ttk.Treeview(self.compare_frame, columns=("Lactate", "Heart Rate", "Power"), show='headings')
+        self.old_tree.heading("Lactate", text="Lactate (mmol/L)")
+        self.old_tree.heading("Heart Rate", text="Heart Rate (bpm)")
+        self.old_tree.heading("Power", text="Power (W)")
+        self.old_tree.grid(row=1, column=0, sticky="nsew", padx=10, pady=5)
+
+        tree_scroll = ttk.Scrollbar(self.compare_frame, orient="vertical", command=self.old_tree.yview)
+        self.old_tree.configure(yscroll=tree_scroll.set)
+        tree_scroll.grid(row=1, column=1, sticky="ns")
+
+        self.compare_frame.rowconfigure(1, weight=1)
+        self.compare_frame.columnconfigure(0, weight=1)
+        
     def create_graph_tab(self):
         # Tab for displaying graphs
         self.graph_frame = ttk.Frame(self.notebook)
@@ -141,30 +167,6 @@ class LactateTestApp:
         self.right_canvas.create_window((0, 0), window=self.compare_plot_frame, anchor="nw")
         self.compare_plot_frame.bind("<Configure>", self.on_frame_configure)
 
-    def create_compare_tab(self):
-        # Tab for comparing tests
-        self.compare_frame = ttk.Frame(self.notebook)
-        self.notebook.add(self.compare_frame, text='Compare Tests')
-
-        button_frame = ttk.Frame(self.compare_frame)
-        button_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
-        button_frame.columnconfigure(0, weight=1)
-
-        ttk.Button(button_frame, text="Upload Old Test", command=self.upload_old_test).grid(row=0, column=0, padx=5, pady=5, sticky="ew")
-        ttk.Button(button_frame, text="Compare Tests", command=self.compare_tests).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-
-        self.old_tree = ttk.Treeview(self.compare_frame, columns=("Lactate", "Heart Rate", "Power"), show='headings')
-        self.old_tree.heading("Lactate", text="Lactate (mmol/L)")
-        self.old_tree.heading("Heart Rate", text="Heart Rate (bpm)")
-        self.old_tree.heading("Power", text="Power (W)")
-        self.old_tree.grid(row=1, column=0, sticky="nsew", padx=10, pady=5)
-
-        tree_scroll = ttk.Scrollbar(self.compare_frame, orient="vertical", command=self.old_tree.yview)
-        self.old_tree.configure(yscroll=tree_scroll.set)
-        tree_scroll.grid(row=1, column=1, sticky="ns")
-
-        self.compare_frame.rowconfigure(1, weight=1)
-        self.compare_frame.columnconfigure(0, weight=1)
 
     def on_frame_configure(self, event):
         # Configure scroll region for canvas
