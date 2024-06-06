@@ -5,7 +5,6 @@ import tkinter as tk
 from tkinter import Canvas, ttk, messagebox, filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
-import matplotlib
 import numpy as np
 import pandas as pd
 from reportlab.lib.pagesizes import letter
@@ -14,7 +13,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 
-matplotlib.use('Agg')
+plt.use('Agg')
 
 class LactateTestApp:
     def __init__(self, root):
