@@ -1,13 +1,16 @@
 import os
 import tempfile
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import Canvas, ttk, messagebox, filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
 import pandas as pd
 from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 
 matplotlib.use('Agg')
@@ -68,16 +71,16 @@ class LactateTestApp:
         ttk.Button(button_frame, text="Calculate All", command=self.calculate_all).grid(row=0, column=5, padx=5, pady=5, sticky="ew")
 
         # Labels for FTP, LT1, LT2, and FATmax results
-        self.ftp_label = ttk.Label(self.data_input_frame, text="FTP: Not Calculated", font=("Roboto", 12, "bold"))
+        self.ftp_label = ttk.Label(self.data_input_frame, text="FTP: Not Calculated")
         self.ftp_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
 
-        self.lt1_label = ttk.Label(self.data_input_frame, text="LT1: Not Calculated", font=("Roboto", 12, "bold"))
+        self.lt1_label = ttk.Label(self.data_input_frame, text="LT1: Not Calculated")
         self.lt1_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
 
-        self.lt2_label = ttk.Label(self.data_input_frame, text="LT2: Not Calculated", font=("Roboto", 12, "bold"))
+        self.lt2_label = ttk.Label(self.data_input_frame, text="LT2: Not Calculated")
         self.lt2_label.grid(row=4, column=0, padx=10, pady=5, sticky="w")
 
-        self.fatmax_label = ttk.Label(self.data_input_frame, text="FATmax: Not Calculated", font=("Roboto", 12, "bold"))
+        self.fatmax_label = ttk.Label(self.data_input_frame, text="FATmax: Not Calculated")
         self.fatmax_label.grid(row=5, column=0, padx=10, pady=5, sticky="w")
 
         self.tree = ttk.Treeview(self.data_input_frame, columns=("Lactate", "Heart Rate", "Power"), show='headings')
@@ -98,9 +101,9 @@ class LactateTestApp:
 
         ttk.Button(self.data_input_frame, text="Export Table to CSV", command=self.export_to_csv).grid(row=7, column=0, padx=5, pady=5, sticky="ew")
         ttk.Button(self.data_input_frame, text="Export Table to Excel", command=self.export_to_excel).grid(row=8, column=0, padx=5, pady=5, sticky="ew")
-
+                                                                                                       
     def create_compare_tab(self):
-        # Tab for comparing tests
+    # Tab for comparing tests
         self.compare_frame = ttk.Frame(self.notebook)
         self.notebook.add(self.compare_frame, text='Compare Tests')
 
@@ -110,6 +113,10 @@ class LactateTestApp:
 
         ttk.Button(button_frame, text="Upload Old Test", command=self.upload_old_test).grid(row=0, column=0, padx=5, pady=5, sticky="ew")
         ttk.Button(button_frame, text="Compare Tests", command=self.compare_tests).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+
+        self.show_new_test_var = tk.BooleanVar(value=True)
+        show_new_test_checkbox = ttk.Checkbutton(button_frame, text="Show New Test", variable=self.show_new_test_var, command=self.compare_tests)
+        show_new_test_checkbox.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
 
         self.old_tree = ttk.Treeview(self.compare_frame, columns=("Lactate", "Heart Rate", "Power"), show='headings')
         self.old_tree.heading("Lactate", text="Lactate (mmol/L)")
@@ -128,7 +135,8 @@ class LactateTestApp:
         # Tab for displaying graphs
         self.graph_frame = ttk.Frame(self.notebook)
         self.notebook.add(self.graph_frame, text='Graphs')
-            # Scrollable area for plots
+
+        # Scrollable area for plots
         self.canvas_frame = ttk.Frame(self.graph_frame)
         self.canvas_frame.pack(fill=tk.BOTH, expand=True)
         
@@ -143,7 +151,8 @@ class LactateTestApp:
         self.right_scrollbar = ttk.Scrollbar(self.canvas_frame, orient="vertical", command=self.right_canvas.yview)
         self.right_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.right_canvas.configure(yscrollcommand = self.right_scrollbar.set)
-            # Frames inside canvases
+        
+        # Frames inside canvases
         self.plot_frame = ttk.Frame(self.left_canvas)
         self.left_canvas.create_window((0, 0), window=self.plot_frame, anchor="nw")
         self.plot_frame.bind("<Configure>", self.on_frame_configure)
@@ -274,6 +283,29 @@ class LactateTestApp:
         self.lt2_label.config(text="LT2: Not Calculated")
         self.fatmax_label.config(text="FATmax: Not Calculated")
 
+    """
+    OLD METHOD FOR CALCULATING THE RESULTS ONE BY ONE
+
+    def calculate_ftp(self):
+        ftp, _, _, _ = self.calculate_ftp_lt1_lt2_fatmax()
+        if ftp is not None:
+            self.ftp_label.config(text=f"FTP: {ftp:.2f} W")
+
+    def calculate_lt1(self):
+        _, lt1, _, _ = self.calculate_ftp_lt1_lt2_fatmax()
+        if lt1 is not None:
+            self.lt1_label.config(text=f"LT1: {lt1:.2f} W")
+
+    def calculate_lt2(self):
+        _, _, lt2, _ = self.calculate_ftp_lt1_lt2_fatmax()
+        if lt2 is not None:
+            self.lt2_label.config(text=f"LT2: {lt2:.2f} W")
+
+    def calculate_fatmax(self):
+        _, _, _, fatmax = self.calculate_ftp_lt1_lt2_fatmax()
+        if fatmax is not None:
+            self.fatmax_label.config(text=f"FATmax: {fatmax:.2f} W")"""
+            
     def calculate_all(self):
         ftp, lt1, lt2, fatmax = self.calculate_ftp_lt1_lt2_fatmax()
 
@@ -320,50 +352,52 @@ class LactateTestApp:
 
         # FATmax: Typically 90-100% of LT1
         fatmax_power = lt1_power * 0.95 if lt1_power else None
-
+        
         return ftp_power, lt1_power, lt2_power, fatmax_power
 
     def plot_data(self):
-        
         for widget in self.plot_frame.winfo_children():
             widget.destroy()
+
+        ftp, lt1, lt2, fatmax = self.calculate_ftp_lt1_lt2_fatmax()
+
+        figure, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
         
-            ftp, lt1, lt2, fatmax = self.calculate_ftp_lt1_lt2_fatmax()
+        stages = list(range(1, len(self.data["lactate"]) + 1))
 
-            figure, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
-            
-            stages = list(range(1, len(self.data["lactate"]) + 1))
+        ax1.plot(stages, self.data["lactate"], marker='o', color='blue', label='New Test')
+        ax1.set_title('Lactate Levels')
+        ax1.set_xlabel('Stage')
+        ax1.set_ylabel('Lactate (mmol/L)')
+        ax1.legend()
 
-            ax1.plot(stages, self.data["lactate"], marker='o', color='blue')
-            ax1.set_title('Lactate Levels')
-            ax1.set_xlabel('Stage')
-            ax1.set_ylabel('Lactate (mmol/L)')
+        ax2.plot(stages, self.data["heart_rate"], marker='o', color='red', label='New Test')
+        ax2.set_title('Heart Rate')
+        ax2.set_xlabel('Stage')
+        ax2.set_ylabel('Heart Rate (bpm)')
+        ax2.legend()
 
-            ax2.plot(stages, self.data["heart_rate"], marker='o', color='red')
-            ax2.set_title('Heart Rate')
-            ax2.set_xlabel('Stage')
-            ax2.set_ylabel('Heart Rate (bpm)')
+        ax3.plot(stages, self.data["power"], marker='o', color='green', label='New Test')
+        ax3.set_title('Power Output')
+        ax3.set_xlabel('Stage')
+        ax3.set_ylabel('Power (W)')
+        ax3.legend()
 
-            ax3.plot(stages, self.data["power"], marker='o', color='green')
-            ax3.set_title('Power Output')
-            ax3.set_xlabel('Stage')
-            ax3.set_ylabel('Power (W)')
+        if ftp is not None:
+            ax3.axhline(y=ftp, color='blue', linestyle='--', label=f'FTP: {ftp:.2f} W')
+        if lt1 is not None:
+            ax3.axhline(y=lt1, color='orange', linestyle='--', label=f'LT1: {lt1:.2f} W')
+        if lt2 is not None:
+            ax3.axhline(y=lt2, color='purple', linestyle='--', label=f'LT2: {lt2:.2f} W')
+        if fatmax is not None:
+            ax3.axhline(y=fatmax, color='cyan', linestyle='--', label=f'FATmax: {fatmax:.2f} W')
 
-            if ftp is not None:
-                ax3.axhline(y=ftp, color='blue', linestyle='--', label=f'FTP: {ftp:.2f} W')
-            if lt1 is not None:
-                ax3.axhline(y=lt1, color='orange', linestyle='--', label=f'LT1: {lt1:.2f} W')
-            if lt2 is not None:
-                ax3.axhline(y=lt2, color='purple', linestyle='--', label=f'LT2: {lt2:.2f} W')
-            if fatmax is not None:
-                ax3.axhline(y=fatmax, color='cyan', linestyle='--', label=f'FATmax: {fatmax:.2f} W')
+        ax3.legend()
 
-            ax3.legend()
-
-            figure.tight_layout()
-            canvas = FigureCanvasTkAgg(figure, self.plot_frame)
-            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-            canvas.draw()
+        figure.tight_layout()
+        canvas = FigureCanvasTkAgg(figure, self.plot_frame)
+        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        canvas.draw()
         
     def export_to_pdf(self):
         file_path = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF files", "*.pdf")])
@@ -489,7 +523,7 @@ class LactateTestApp:
         # Calculate the new and old results
         new_ftp, new_lt1, new_lt2, new_fatmax = self.calculate_ftp_lt1_lt2_fatmax()
         old_ftp, old_lt1, old_lt2, old_fatmax = self.calculate_old_ftp_lt1_lt2_fatmax()
-        
+
         improvements = {
             "FTP": (new_ftp - old_ftp) if new_ftp and old_ftp else None,
             "LT1": (new_lt1 - old_lt1) if new_lt1 and old_lt1 else None,
@@ -497,29 +531,70 @@ class LactateTestApp:
             "FATmax": (new_fatmax - old_fatmax) if new_fatmax and old_fatmax else None
         }
 
+        for widget in self.plot_frame.winfo_children():
+            widget.destroy()
+
         for widget in self.compare_plot_frame.winfo_children():
             widget.destroy()
 
-        figure, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
+        # Plot new test data in the left pane
+        new_figure, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
 
         stages_new = list(range(1, len(self.data["lactate"]) + 1))
-        stages_old = list(range(1, len(self.old["lactate"]) + 1))
-        
-        ax1.plot(stages_new, self.data["lactate"], marker='o', color='blue', label='New Test')
+
+        ax1.plot(stages_new, self.data["lactate"], marker='o', color='blue')
+        ax1.set_title('Lactate Levels')
+        ax1.set_xlabel('Stage')
+        ax1.set_ylabel('Lactate (mmol/L)')
+
+        ax2.plot(stages_new, self.data["heart_rate"], marker='o', color='red')
+        ax2.set_title('Heart Rate')
+        ax2.set_xlabel('Stage')
+        ax2.set_ylabel('Heart Rate (bpm)')
+
+        ax3.plot(stages_new, self.data["power"], marker='o', color='green')
+        ax3.set_title('Power Output')
+        ax3.set_xlabel('Stage')
+        ax3.set_ylabel('Power (W)')
+
+        if new_ftp is not None:
+            ax3.axhline(y=new_ftp, color='blue', linestyle='--', label=f'FTP: {new_ftp:.2f} W')
+        if new_lt1 is not None:
+            ax3.axhline(y=new_lt1, color='orange', linestyle='--', label=f'LT1: {new_lt1:.2f} W')
+        if new_lt2 is not None:
+            ax3.axhline(y=new_lt2, color='purple', linestyle='--', label=f'LT2: {new_lt2:.2f} W')
+        if new_fatmax is not None:
+            ax3.axhline(y=new_fatmax, color='cyan', linestyle='--', label=f'FATmax: {new_fatmax:.2f} W')
+
+        ax3.legend()
+
+        new_figure.tight_layout()
+        new_canvas = FigureCanvasTkAgg(new_figure, self.plot_frame)
+        new_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        new_canvas.draw()
+
+        # Plot old test data in the right pane
+        old_figure, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 12))
+
+        stages_old = list(range(1, len(self.old_data["lactate"]) + 1))
+
+        if self.show_new_test_var.get():
+            ax1.plot(stages_new, self.data["lactate"], marker='o', color='blue', label='New Test')
+            ax2.plot(stages_new, self.data["heart_rate"], marker='o', color='red', label='New Test')
+            ax3.plot(stages_new, self.data["power"], marker='o', color='green', label='New Test')
+
         ax1.plot(stages_old, self.old_data["lactate"], marker='x', color='green', label='Old Test')
         ax1.set_title('Lactate Levels')
         ax1.set_xlabel('Stage')
         ax1.set_ylabel('Lactate (mmol/L)')
         ax1.legend()
 
-        ax2.plot(stages_new, self.data["heart_rate"], marker='o', color='red', label='New Test')
         ax2.plot(stages_old, self.old_data["heart_rate"], marker='x', color='orange', label='Old Test')
         ax2.set_title('Heart Rate')
         ax2.set_xlabel('Stage')
         ax2.set_ylabel('Heart Rate (bpm)')
         ax2.legend()
 
-        ax3.plot(stages_new, self.data["power"], marker='o', color='green', label='New Test')
         ax3.plot(stages_old, self.old_data["power"], marker='x', color='purple', label='Old Test')
         ax3.set_title('Power Output')
         ax3.set_xlabel('Stage')
@@ -536,10 +611,10 @@ class LactateTestApp:
                 f"FATmax: {improvements['FATmax']:.2f} W",
                 bbox=dict(facecolor='white', alpha=0.8))
 
-        figure.tight_layout()
-        canvas = FigureCanvasTkAgg(figure, self.compare_plot_frame)
-        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-        canvas.draw()
+        old_figure.tight_layout()
+        old_canvas = FigureCanvasTkAgg(old_figure, self.compare_plot_frame)
+        old_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        old_canvas.draw()
 
     def calculate_old_ftp_lt1_lt2_fatmax(self):
         # Calculate FTP, LT1, LT2, and FATmax based on old lactate and power data
@@ -564,7 +639,7 @@ class LactateTestApp:
             fatmax_power = power[:lt1_index].max() if lt1_index > 0 else None
 
         return ftp_power, lt1_power, lt2_power, fatmax_power
-        
+
 
 # THIS RUNS THE PROGRAM        
 if __name__ == '__main__':
