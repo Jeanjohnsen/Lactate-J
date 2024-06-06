@@ -18,7 +18,7 @@ matplotlib.use('Agg')
 class LactateTestApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Lactate Test App")
+        self.root.title("Lactate-J")
         self.root.geometry("2560x1600")
 
         self.data = {"lactate": [], "heart_rate": [], "power": []}
@@ -309,7 +309,16 @@ class LactateTestApp:
             self.fatmax_label.config(text=f"FATmax: {fatmax:.2f} W")
 
     def calculate_ftp_lt1_lt2_fatmax(self):
-        # Calculate FTP, LT1, LT2, and FATmax based on lactate and power data
+        """
+        Calculate FTP, LT1, LT2, and FATmax based on lactate and power data.
+
+        Returns:
+            ftp_power (float): Estimated Functional Threshold Power (FTP).
+            lt1_power (float): Power at the first lactate threshold (LT1).
+            lt2_power (float): Power at the second lactate threshold (LT2).
+            fatmax_power (float): Power at which fat oxidation is maximized (Fatmax).
+        """
+        
         lactate = np.array(self.data["lactate"])
         power = np.array(self.data["power"])
 
@@ -317,19 +326,19 @@ class LactateTestApp:
             messagebox.showerror("Insufficient data", "Please add more data points to calculate FTP, LT1, LT2, and FATmax.")
             return None, None, None, None
 
-        baseline_lactate = lactate[0]
-
-        lt1_index = np.argmax(lactate > (baseline_lactate + 0.5))
+        # Find LT1: the first significant rise in lactate within 1.5-2.0 mmol/L
+        lt1_index = np.argmax((lactate[1:] >= 1.5) & (lactate[1:] <= 2.0)) + 1
         lt1_power = power[lt1_index] if lt1_index > 0 else None
 
-        lt2_index = np.argmax(lactate >= 4)
-        lt2_power = power[lt2_index] if lt2_index > 0 else None
+        # Find LT2: the next significant rise in lactate within 3.0-6.0 mmol/L after LT1
+        lt2_index = np.argmax((lactate[lt1_index+1:] >= 3.0) & (lactate[lt1_index+1:] <= 6.0)) + lt1_index + 1
+        lt2_power = power[lt2_index] if lt2_index > lt1_index else None
 
-        ftp_power = lt2_power * 0.95 if lt2_power else power[-1]
+        # FTP: Typically 5-10% above LT2
+        ftp_power = lt2_power * 1.075 if lt2_power else power[-1]
 
-        fatmax_power = None
-        if lt1_index > 0:
-            fatmax_power = power[:lt1_index].max() if lt1_index > 0 else None
+        # FATmax: Typically 90-100% of LT1
+        fatmax_power = lt1_power * 0.95 if lt1_power else None
 
         return ftp_power, lt1_power, lt2_power, fatmax_power
 
@@ -396,13 +405,13 @@ class LactateTestApp:
         elements.append(Paragraph("Lactate Test Results", title_style))
         elements.append(Spacer(1, 12))
 
-        elements.append(Paragraph(f"FTP: {ftp:.2f} W" if ftp is not None else "FTP: Not Calculated", normal_style))
+        elements.append(Paragraph(f"FTP: {ftp:.2f} W. Calculated approx. 5-10% above LT2" if ftp is not None else "FTP: Not Calculated", normal_style))
         elements.append(Spacer(1, 12))
-        elements.append(Paragraph(f"LT1: {lt1:.2f} W" if lt1 is not None else "LT1: Not Calculated", normal_style))
+        elements.append(Paragraph(f"LT1: {lt1:.2f} W. Calculated approx. 1.5 - 2.0 mmol/L" if lt1 is not None else "LT1: Not Calculated", normal_style))
         elements.append(Spacer(1, 12))
-        elements.append(Paragraph(f"LT2: {lt2:.2f} W" if lt2 is not None else "LT2: Not Calculated", normal_style))
+        elements.append(Paragraph(f"LT2: {lt2:.2f} W. Calculated approx. 3.0 - 6.0 mmol/L" if lt2 is not None else "LT2: Not Calculated", normal_style))
         elements.append(Spacer(1, 12))
-        elements.append(Paragraph(f"FATmax: {fatmax:.2f} W" if fatmax is not None else "FATmax: Not Calculated", normal_style))
+        elements.append(Paragraph(f"FATmax: {fatmax:.2f} W. Calculated approx. 90-100% below LT1" if fatmax is not None else "FATmax: Not Calculated", normal_style))
         elements.append(Spacer(1, 24))
 
         # Create the figure and save it as an image
@@ -495,6 +504,17 @@ class LactateTestApp:
             messagebox.showerror("Error", "No old test data available for comparison.")
             return
 
+        # Calculate the new and old results
+        new_ftp, new_lt1, new_lt2, new_fatmax = self.calculate_ftp_lt1_lt2_fatmax()
+        old_ftp, old_lt1, old_lt2, old_fatmax = self.calculate_old_ftp_lt1_lt2_fatmax()
+        
+        improvements = {
+            "FTP": (new_ftp - old_ftp) if new_ftp and old_ftp else None,
+            "LT1": (new_lt1 - old_lt1) if new_lt1 and old_lt1 else None,
+            "LT2": (new_lt2 - old_lt2) if new_lt2 and old_lt2 else None,
+            "FATmax": (new_fatmax - old_fatmax) if new_fatmax and old_fatmax else None
+        }
+
         for widget in self.compare_plot_frame.winfo_children():
             widget.destroy()
 
@@ -523,11 +543,45 @@ class LactateTestApp:
         ax3.set_xlabel('Stage')
         ax3.set_ylabel('Power (W)')
         ax3.legend()
-        
+
+        # Display improvements
+        text_x = max(stages_new + stages_old) * 0.5
+        text_y = max(self.data["power"] + self.old_data["power"]) * 0.8
+        ax3.text(text_x, text_y, 
+                f"Progress:\nFTP: {improvements['FTP']:.2f} W\n"
+                f"LT1: {improvements['LT1']:.2f} W\n"
+                f"LT2: {improvements['LT2']:.2f} W\n"
+                f"FATmax: {improvements['FATmax']:.2f} W",
+                bbox=dict(facecolor='white', alpha=0.8))
+
         figure.tight_layout()
         canvas = FigureCanvasTkAgg(figure, self.compare_plot_frame)
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         canvas.draw()
+
+    def calculate_old_ftp_lt1_lt2_fatmax(self):
+        # Calculate FTP, LT1, LT2, and FATmax based on old lactate and power data
+        lactate = np.array(self.old_data["lactate"])
+        power = np.array(self.old_data["power"])
+
+        if len(lactate) < 4:
+            return None, None, None, None
+
+        baseline_lactate = lactate[0]
+
+        lt1_index = np.argmax(lactate > (baseline_lactate + 0.5))
+        lt1_power = power[lt1_index] if lt1_index > 0 else None
+
+        lt2_index = np.argmax(lactate >= 4)
+        lt2_power = power[lt2_index] if lt2_index > 0 else None
+
+        ftp_power = lt2_power * 0.95 if lt2_power else power[-1]
+
+        fatmax_power = None
+        if lt1_index > 0:
+            fatmax_power = power[:lt1_index].max() if lt1_index > 0 else None
+
+        return ftp_power, lt1_power, lt2_power, fatmax_power
         
 
 # THIS RUNS THE PROGRAM        
