@@ -8,7 +8,7 @@ import platform
 class LactateTestApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Lactate-J")
+        self.root.title("LactateLab")
         self.root.geometry("2560x1600")
 
         self.data = {"lactate": [], "heart_rate": [], "power": []}
@@ -685,7 +685,7 @@ class LactateTestApp:
 
         # Add image to PDF
         elements.append(
-            Image(pdf_image_path, width=500, height=600, kind="proportional")
+            Image(pdf_image_path, width=350, height=450, kind="proportional")
         )
 
         # Build the PDF
