@@ -1,6 +1,6 @@
-# Lactate Test App
+# LactateLab
 
-Lactate Test App is a Python application that helps athletes and coaches analyze lactate testing data. The app allows users to input lactate test data manually or upload data from an Excel file. It calculates key metrics such as Functional Threshold Power (FTP), Lactate Threshold 1 (LT1), Lactate Threshold 2 (LT2), and FATmax. Additionally, it provides visualizations of the data.
+LactateLab is a Python application that helps athletes and coaches analyze lactate testing data. The app allows users to input lactate test data manually or upload data from an Excel file. It calculates key metrics such as Functional Threshold Power (FTP), Lactate Threshold 1 (LT1), Lactate Threshold 2 (LT2), and FATmax. Additionally, it provides visualizations of the data.
 
 ## Features
 
