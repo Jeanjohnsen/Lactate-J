@@ -51,9 +51,9 @@ LactateLab is a graphical user interface (GUI) application for managing and anal
 
 ## Visualization
 
-1. **Data Input**:
+- **Data Input**:
     Click “Plot Data” to generate graphs for lactate levels, heart rate, and power output.
-2.	**Compare Tests**:
+- **Compare Tests**:
     Click “Upload Old Test” to upload an old test data file.
     Click “Compare Tests” to compare new test data with old test data.
     Use the “Show New Test” checkbox to toggle the visibility of the new test data in the comparison graph.
