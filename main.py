@@ -5,7 +5,7 @@ from tkinter import ttk, messagebox, filedialog
 import platform
 
 
-class LactateTestApp:
+class LactateLab:
     def __init__(self, root):
         self.root = root
         self.root.title("LactateLab")
@@ -961,5 +961,5 @@ class LactateTestApp:
 # THIS RUNS THE PROGRAM
 if __name__ == "__main__":
     root = tk.Tk()
-    app = LactateTestApp(root)
+    app = LactateLab(root)
     root.mainloop()
