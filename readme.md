@@ -1,91 +1,79 @@
 # LactateLab
 
-LactateLab is a Python application that helps athletes and coaches analyze lactate testing data. The app allows users to input lactate test data manually or upload data from an Excel file. It calculates key metrics such as Functional Threshold Power (FTP), Lactate Threshold 1 (LT1), Lactate Threshold 2 (LT2), and FATmax. Additionally, it provides visualizations of the data.
+LactateLab is a graphical user interface (GUI) application for managing and analyzing lactate test data for athletes. The application allows users to input data manually, upload data from Excel files, and calculate key performance metrics such as Functional Threshold Power (FTP), Lactate Threshold 1 (LT1), Lactate Threshold 2 (LT2), and FATmax. The application also provides functionality to compare new test data with old test data and visualize the results in graphs.
 
 ## Features
 
-- Manually input lactate test data (Stage, Lactate, Heart Rate, Power).
-- Upload lactate test data from an Excel file.
-- Automatically generate stage numbers if the "Stage" column is missing in the uploaded Excel file.
-- Calculate FTP, LT1, LT2, and FATmax.
-- Visualize lactate levels, heart rate, and power output across different stages.
-- Scrollable graph display.
+- **Data Input**: Manually input lactate, heart rate, and power data.
+- **Upload Data**: Upload test data from Excel files.
+- **Data Management**: Add, edit, and clear data entries.
+- **Export Data**: Export data to CSV and Excel formats.
+- **Performance Metrics**: Calculate FTP, LT1, LT2, and FATmax.
+- **Graphical Visualization**: Plot and compare test data with visual graphs.
+- **Report Generation**: Export results and graphs to PDF.
 
-## Requirements
+## Getting Started
+
+### Prerequisites
 
 - Python 3.x
-- pandas
-- numpy
-- matplotlib
-- tkinter
+- Required Python packages: `pandas`, `numpy`, `matplotlib`, `tkinter`, `reportlab`
 
-## Installation
+### Installation
 
 1. **Clone the repository**:
-    ```sh
-    git clone https://github.com/jeanjohnsen/Lactate-J.git
-    cd lactate-j
-    ```
+   ```sh
+   git clone https://github.com/yourusername/LactateLab.git
+   cd LactateLab
+   pip install pandas numpy matplotlib reportlab
+   python main.py
+   ```
+# Usage
 
-2. **Install required Python packages**:
-    ```sh
-    pip install pandas numpy matplotlib
-    ```
+## Data Input
 
-3. **Run the application**:
-    ```sh
-    python main.py
-    ```
+	1.	Manual Entry:
+	•	Enter values for lactate, heart rate, and power in the provided fields.
+	•	Click “Add Data” to add the entry to the table.
+	2.	Upload Data:
+	•	Click “Upload Excel” to upload data from an Excel file.
+	•	The application supports .xls and .xlsx file formats.
+	3.	Export Data:
+	•	Click “Export to CSV” or “Export to Excel” to save the table data.
+	4.	Clear Data:
+	•	Click “Clear Data” to remove all entries from the table.
 
-## Usage
+## Calculations
 
-### Manual Data Input
+	•	Calculate Metrics:
+	•	Click “Calculate All” to compute FTP, LT1, LT2, and FATmax based on the entered data.
+	•	The results will be displayed next to their respective labels.
 
-1. Open the application.
-2. In the "Data Input" tab, enter the stage, lactate level, heart rate, and power for each test stage.
-3. Click "Add Data" to add the data to the table.
+## Visualization
 
-### Uploading Excel Data
+	1.	Plot Data:
+	•	Click “Plot Data” to generate graphs for lactate levels, heart rate, and power output.
+	2.	Compare Tests:
+	•	Click “Upload Old Test” to upload an old test data file.
+	•   Click “Compare Tests” to compare new test data with old test data.
+	•	Use the “Show New Test” checkbox to toggle the visibility of the new test data in the comparison graph.
 
-1. Click the "Upload Excel" button.
-2. Select the Excel file containing the lactate test data.
-3. If the Excel file does not contain a "Stage" column, the app will generate stage numbers automatically based on the number of rows.
+## Reporting
 
-### Calculating Metrics
+	•	Export to PDF:
+	•	Click “Export to PDF” to generate a PDF report containing the test results and graphs.
 
-1. Click the "Calculate FTP", "Calculate LT1", "Calculate LT2", and "Calculate FATmax" buttons to compute the respective values.
-2. The calculated values will be displayed next to their corresponding labels.
-
-### Plotting Data
-
-1. Click the "Plot Data" button to generate graphs.
-2. Switch to the "Graphs" tab to view the visualizations.
-
-## File Structure
-
-```plaintext
-lactate-test-app/
+# File Structure
+```
+LactateLab/
 │
-├── main.py   # Main application script
-├── README.md             # This readme file
-├── LICENSE               # Custom license
-└── requirements.txt      # Python package requirements
+├── main.py              # Main application script
+├── README.md            # This readme file
+├── data/                # Directory for storing data files (if applicable)
+├── tests/               # Directory for test scripts
+└── requirements.txt     # List of required Python packages
 ```
 
-## Example Data Format
+# License
 
-The Excel file should contain columns for “Lactate”, “Heart Rate”, and “Power”. If the “Stage” column is missing, the app will generate stage numbers automatically.
-
-| Stage | Lactate | Heart Rate | Power |
-|-------|---------|------------|-------|
-| 1     | 1.2     | 130        | 200   |
-| 2     | 1.5     | 135        | 210   |
-| 3     | 1.8     | 140        | 220   |
-| ...   | ...     | ...        | ...   |
-
-## License
-
-This project is licensed under a custom license for use strictly as part of a Software as a Service (SaaS) offering provided by the copyright holder. For any usage outside of the permissions granted, please contact [HøjFrekvens] at [jeanjohnsen@pm.me].
-
-## Contact
-For any questions or issues, please open an issue on the GitHub repository or contact me at jeanjohnsen@pm.me
+This project is licensed under a custom license for use strictly as part of a Software as a Service (SaaS) offering provided by the copyright holder. For any usage outside of the permissions granted, please contact [Your Name or Company] at [Your Contact Information].
