@@ -75,4 +75,4 @@ LactateLab/
 
 # License
 
-This project is licensed under a custom license for use strictly as part of a Software as a Service (SaaS) offering provided by the copyright holder. For any usage outside of the permissions granted, please contact [Your Name or Company] at [Your Contact Information].
+This project is licensed under a custom license for use strictly as part of a Software as a Service (SaaS) offering provided by the copyright holder. For any usage outside of the permissions granted, please contact me at Jeanjohnsen@pm.me.
