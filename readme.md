@@ -32,36 +32,35 @@ LactateLab is a graphical user interface (GUI) application for managing and anal
 
 ## Data Input
 
-1.	**Manual Entry**:
-	•	Enter values for lactate, heart rate, and power in the provided fields.
-	•	Click “Add Data” to add the entry to the table.
-2.	**Upload Data**:
-	•	Click “Upload Excel” to upload data from an Excel file.
-	•	The application supports .xls and .xlsx file formats.
-3.	**Export Data**:
-	•	Click “Export to CSV” or “Export to Excel” to save the table data.
-4.	**Clear Data**:
-	•	Click “Clear Data” to remove all entries from the table.
+- **Manual Entry**:	
+    Enter values for lactate, heart rate, and power in the provided fields.
+    Click “Add Data” to add the entry to the table.
+- **Upload Data**:
+    Click “Upload Excel” to upload data from an Excel file.
+    The application supports .xls and .xlsx file formats.
+- **Export Data**:
+    Click “Export to CSV” or “Export to Excel” to save the table data.
+- **Clear Data**:
+    Click “Clear Data” to remove all entries from the table.
 
 ## Calculations
 
-	•	Calculate Metrics:
-	•	Click “Calculate All” to compute FTP, LT1, LT2, and FATmax based on the entered data.
-	•	The results will be displayed next to their respective labels.
+- **Calculate Metrics**:
+    Click “Calculate All” to compute FTP, LT1, LT2, and FATmax based on the entered data.
+    The results will be displayed next to their respective labels.
 
 ## Visualization
 
 1. **Data Input**:
-	•	Click “Plot Data” to generate graphs for lactate levels, heart rate, and power output.
+    Click “Plot Data” to generate graphs for lactate levels, heart rate, and power output.
 2.	**Compare Tests**:
-	•	Click “Upload Old Test” to upload an old test data file.
-	•   Click “Compare Tests” to compare new test data with old test data.
-	•	Use the “Show New Test” checkbox to toggle the visibility of the new test data in the comparison graph.
+    Click “Upload Old Test” to upload an old test data file.
+    Click “Compare Tests” to compare new test data with old test data.
+    Use the “Show New Test” checkbox to toggle the visibility of the new test data in the comparison graph.
 
 ## Reporting
 
-	•	Export to PDF:
-	•	Click “Export to PDF” to generate a PDF report containing the test results and graphs.
+- **Export to PDF**: Click “Export to PDF” to generate a PDF report containing the test results and graphs.
 
 # File Structure
 ```
